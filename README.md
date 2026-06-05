@@ -3,7 +3,9 @@
 Open-source WordPress portal for public traffic services and information.
 
 ## Overview
+## Homepage Preview
 
+![Homepage Preview](docs/homepage.png)
 Satlantas Ponorogo is a custom WordPress-based public service portal designed to improve access to traffic police services, information, and community engagement.
 
 The project focuses on providing citizens with easy access to:
