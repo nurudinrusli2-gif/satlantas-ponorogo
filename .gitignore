@@ -1,0 +1,21 @@
+# WordPress Core
+/wp-admin/
+/wp-includes/
+
+# Uploads
+/wp-content/uploads/
+
+# Cache
+/wp-content/cache/
+/wp-content/upgrade/
+
+# Logs
+*.log
+*.tmp
+
+# LocalWP
+local-xdebuginfo.php
+
+# OS files
+Thumbs.db
+.DS_Store
