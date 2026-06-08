@@ -355,3 +355,252 @@ function satlantas_order_sim_keliling_archive( $query ) {
 	);
 }
 add_action( 'pre_get_posts', 'satlantas_order_sim_keliling_archive' );
+
+/**
+ * Registers public announcements managed from the WordPress dashboard.
+ */
+function satlantas_register_pengumuman_post_type() {
+	register_post_type(
+		'pengumuman',
+		array(
+			'labels'       => array(
+				'name'               => esc_html__( 'Pengumuman', 'satlantas-ponorogo' ),
+				'singular_name'      => esc_html__( 'Pengumuman', 'satlantas-ponorogo' ),
+				'menu_name'          => esc_html__( 'Pengumuman', 'satlantas-ponorogo' ),
+				'add_new_item'       => esc_html__( 'Tambah Pengumuman', 'satlantas-ponorogo' ),
+				'edit_item'          => esc_html__( 'Edit Pengumuman', 'satlantas-ponorogo' ),
+				'new_item'           => esc_html__( 'Pengumuman Baru', 'satlantas-ponorogo' ),
+				'view_item'          => esc_html__( 'Lihat Pengumuman', 'satlantas-ponorogo' ),
+				'search_items'       => esc_html__( 'Cari Pengumuman', 'satlantas-ponorogo' ),
+				'not_found'          => esc_html__( 'Belum ada pengumuman.', 'satlantas-ponorogo' ),
+				'not_found_in_trash' => esc_html__( 'Tidak ada pengumuman di sampah.', 'satlantas-ponorogo' ),
+			),
+			'public'       => true,
+			'has_archive'  => true,
+			'menu_icon'    => 'dashicons-megaphone',
+			'rewrite'      => array( 'slug' => 'pengumuman' ),
+			'supports'     => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
+			'show_in_rest' => true,
+		)
+	);
+}
+add_action( 'init', 'satlantas_register_pengumuman_post_type' );
+
+/**
+ * Flushes rewrite rules once after Pengumuman is registered.
+ */
+function satlantas_maybe_flush_pengumuman_rewrites() {
+	$rewrite_version = 'pengumuman-1';
+
+	if ( get_option( 'satlantas_pengumuman_rewrite_version' ) === $rewrite_version ) {
+		return;
+	}
+
+	flush_rewrite_rules();
+	update_option( 'satlantas_pengumuman_rewrite_version', $rewrite_version );
+}
+add_action( 'init', 'satlantas_maybe_flush_pengumuman_rewrites', 20 );
+
+/**
+ * Adds announcement detail fields to the admin editor.
+ */
+function satlantas_add_pengumuman_meta_box() {
+	add_meta_box(
+		'satlantas_pengumuman_details',
+		esc_html__( 'Detail Pengumuman', 'satlantas-ponorogo' ),
+		'satlantas_render_pengumuman_meta_box',
+		'pengumuman',
+		'normal',
+		'high'
+	);
+}
+add_action( 'add_meta_boxes', 'satlantas_add_pengumuman_meta_box' );
+
+/**
+ * Renders announcement schedule, status, and priority fields.
+ *
+ * @param WP_Post $post Current Pengumuman post.
+ */
+function satlantas_render_pengumuman_meta_box( $post ) {
+	wp_nonce_field( 'satlantas_save_pengumuman_meta', 'satlantas_pengumuman_nonce' );
+
+	$tanggal_mulai    = get_post_meta( $post->ID, 'tanggal_mulai', true );
+	$tanggal_berakhir = get_post_meta( $post->ID, 'tanggal_berakhir', true );
+	$status           = get_post_meta( $post->ID, 'status', true ) ?: 'aktif';
+	$prioritas        = get_post_meta( $post->ID, 'prioritas', true ) ?: 'normal';
+	?>
+	<p>
+		<label for="satlantas-pengumuman-tanggal-mulai"><strong><?php esc_html_e( 'Tanggal Mulai', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-pengumuman-tanggal-mulai" type="date" name="satlantas_pengumuman[tanggal_mulai]" value="<?php echo esc_attr( $tanggal_mulai ); ?>" class="widefat">
+	</p>
+	<p>
+		<label for="satlantas-pengumuman-tanggal-berakhir"><strong><?php esc_html_e( 'Tanggal Berakhir', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-pengumuman-tanggal-berakhir" type="date" name="satlantas_pengumuman[tanggal_berakhir]" value="<?php echo esc_attr( $tanggal_berakhir ); ?>" class="widefat">
+	</p>
+	<p>
+		<label for="satlantas-pengumuman-status"><strong><?php esc_html_e( 'Status', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<select id="satlantas-pengumuman-status" name="satlantas_pengumuman[status]" class="widefat">
+			<option value="aktif" <?php selected( $status, 'aktif' ); ?>><?php esc_html_e( 'Aktif', 'satlantas-ponorogo' ); ?></option>
+			<option value="nonaktif" <?php selected( $status, 'nonaktif' ); ?>><?php esc_html_e( 'Nonaktif', 'satlantas-ponorogo' ); ?></option>
+		</select>
+	</p>
+	<p>
+		<label for="satlantas-pengumuman-prioritas"><strong><?php esc_html_e( 'Prioritas', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<select id="satlantas-pengumuman-prioritas" name="satlantas_pengumuman[prioritas]" class="widefat">
+			<option value="tinggi" <?php selected( $prioritas, 'tinggi' ); ?>><?php esc_html_e( 'Tinggi', 'satlantas-ponorogo' ); ?></option>
+			<option value="normal" <?php selected( $prioritas, 'normal' ); ?>><?php esc_html_e( 'Normal', 'satlantas-ponorogo' ); ?></option>
+		</select>
+	</p>
+	<?php
+}
+
+/**
+ * Saves announcement metadata.
+ *
+ * @param int $post_id Current post ID.
+ */
+function satlantas_save_pengumuman_meta( $post_id ) {
+	if (
+		! isset( $_POST['satlantas_pengumuman_nonce'] ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['satlantas_pengumuman_nonce'] ) ), 'satlantas_save_pengumuman_meta' )
+	) {
+		return;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	$fields = isset( $_POST['satlantas_pengumuman'] ) ? (array) wp_unslash( $_POST['satlantas_pengumuman'] ) : array();
+
+	$tanggal_mulai    = isset( $fields['tanggal_mulai'] ) ? sanitize_text_field( $fields['tanggal_mulai'] ) : '';
+	$tanggal_berakhir = isset( $fields['tanggal_berakhir'] ) ? sanitize_text_field( $fields['tanggal_berakhir'] ) : '';
+	$status           = ( isset( $fields['status'] ) && 'nonaktif' === $fields['status'] ) ? 'nonaktif' : 'aktif';
+	$prioritas        = ( isset( $fields['prioritas'] ) && 'tinggi' === $fields['prioritas'] ) ? 'tinggi' : 'normal';
+	$priority_order   = 'tinggi' === $prioritas ? 1 : 0;
+
+	update_post_meta( $post_id, 'tanggal_mulai', $tanggal_mulai );
+	update_post_meta( $post_id, 'tanggal_berakhir', $tanggal_berakhir );
+	update_post_meta( $post_id, 'status', $status );
+	update_post_meta( $post_id, 'prioritas', $prioritas );
+	update_post_meta( $post_id, 'prioritas_order', $priority_order );
+}
+add_action( 'save_post_pengumuman', 'satlantas_save_pengumuman_meta' );
+
+/**
+ * Returns the active announcement meta query.
+ *
+ * @return array
+ */
+function satlantas_get_active_pengumuman_meta_query() {
+	$today = current_time( 'Y-m-d' );
+
+	return array(
+		'relation' => 'AND',
+		array(
+			'key'     => 'status',
+			'value'   => 'aktif',
+			'compare' => '=',
+		),
+		array(
+			'relation' => 'OR',
+			array(
+				'key'     => 'tanggal_mulai',
+				'compare' => 'NOT EXISTS',
+			),
+			array(
+				'key'     => 'tanggal_mulai',
+				'value'   => '',
+				'compare' => '=',
+			),
+			array(
+				'key'     => 'tanggal_mulai',
+				'value'   => $today,
+				'compare' => '<=',
+				'type'    => 'DATE',
+			),
+		),
+		array(
+			'relation' => 'OR',
+			array(
+				'key'     => 'tanggal_berakhir',
+				'compare' => 'NOT EXISTS',
+			),
+			array(
+				'key'     => 'tanggal_berakhir',
+				'value'   => '',
+				'compare' => '=',
+			),
+			array(
+				'key'     => 'tanggal_berakhir',
+				'value'   => $today,
+				'compare' => '>=',
+				'type'    => 'DATE',
+			),
+		),
+	);
+}
+
+/**
+ * Returns active announcements ordered by priority and newest publish date.
+ *
+ * @param int $posts_per_page Number of announcements to fetch.
+ * @return WP_Query
+ */
+function satlantas_get_active_pengumuman( $posts_per_page = 3 ) {
+	return new WP_Query(
+		array(
+			'post_type'      => 'pengumuman',
+			'posts_per_page' => $posts_per_page,
+			'meta_key'       => 'prioritas_order',
+			'orderby'        => array(
+				'meta_value_num' => 'DESC',
+				'date'           => 'DESC',
+			),
+			'meta_query'     => satlantas_get_active_pengumuman_meta_query(),
+		)
+	);
+}
+
+/**
+ * Formats announcement dates.
+ *
+ * @param string $date Date in Y-m-d format.
+ * @return string
+ */
+function satlantas_format_pengumuman_date( $date ) {
+	if ( empty( $date ) ) {
+		return '';
+	}
+
+	$timestamp = strtotime( $date );
+
+	return $timestamp ? date_i18n( 'd M Y', $timestamp ) : $date;
+}
+
+/**
+ * Makes the Pengumuman archive show active announcements first.
+ *
+ * @param WP_Query $query Current query object.
+ */
+function satlantas_order_pengumuman_archive( $query ) {
+	if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'pengumuman' ) ) {
+		return;
+	}
+
+	$query->set( 'posts_per_page', 10 );
+	$query->set( 'meta_key', 'prioritas_order' );
+	$query->set(
+		'orderby',
+		array(
+			'meta_value_num' => 'DESC',
+			'date'           => 'DESC',
+		)
+	);
+	$query->set( 'meta_query', satlantas_get_active_pengumuman_meta_query() );
+}
+add_action( 'pre_get_posts', 'satlantas_order_pengumuman_archive' );

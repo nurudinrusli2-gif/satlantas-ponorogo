@@ -591,6 +591,115 @@ a.news-thumb img {
 	line-height: 1.35;
 }
 
+.announcement-section {
+	padding-top: 42px;
+	padding-bottom: 44px;
+}
+
+.announcement-grid,
+.announcement-list {
+	display: grid;
+	gap: 22px;
+}
+
+.announcement-grid {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.announcement-card,
+.announcement-empty {
+	display: grid;
+	gap: 14px;
+	padding: 24px;
+	background: #fff;
+	border: 1px solid rgba(15, 141, 244, 0.14);
+	border-radius: 8px;
+	box-shadow: 0 12px 28px rgba(28, 44, 68, 0.1);
+}
+
+.announcement-empty {
+	grid-column: 1 / -1;
+}
+
+.announcement-card__meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.announcement-card__meta time,
+.announcement-card__meta span {
+	display: inline-flex;
+	align-items: center;
+	min-height: 28px;
+	padding: 0 11px;
+	color: var(--blue-dark);
+	background: var(--blue-soft);
+	border-radius: 2px;
+	font-size: 11px;
+	font-weight: 800;
+}
+
+.announcement-card__meta span {
+	color: #fff;
+	background: var(--blue);
+}
+
+.announcement-card h2,
+.announcement-card h3 {
+	margin: 0;
+	color: var(--blue-dark);
+	font-size: 19px;
+	line-height: 1.25;
+}
+
+.announcement-card p,
+.announcement-empty p {
+	margin: 0;
+	color: #5a6572;
+	font-size: 13px;
+	line-height: 1.55;
+}
+
+.announcement-card .read-more {
+	justify-self: start;
+	margin-top: 2px;
+}
+
+.announcement-list {
+	margin-top: 8px;
+}
+
+.announcement-card--list {
+	grid-template-columns: 240px 1fr;
+	align-items: stretch;
+}
+
+.announcement-card__content {
+	display: grid;
+	gap: 14px;
+	align-content: start;
+}
+
+.announcement-thumb {
+	display: block;
+	overflow: hidden;
+	min-height: 180px;
+	background: #e8edf2;
+	border-radius: 6px;
+}
+
+.announcement-thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.announcement-entry__meta {
+	margin-top: 14px;
+}
+
 .public-services {
 	padding: 30px max(40px, calc((100% - var(--max)) / 2)) 42px;
 	text-align: center;
@@ -1302,6 +1411,7 @@ a.news-thumb img {
 
 	.news-grid,
 	.public-grid,
+	.announcement-grid,
 	.sim-keliling-grid {
 		grid-template-columns: repeat(2, 1fr);
 	}
@@ -1421,10 +1531,19 @@ a.news-thumb img {
 	.main-service-grid,
 	.news-grid,
 	.public-grid,
+	.announcement-grid,
 	.sim-keliling-grid,
 	.cctv-grid,
 	.help-card-row {
 		grid-template-columns: 1fr;
+	}
+
+	.announcement-card--list {
+		grid-template-columns: 1fr;
+	}
+
+	.announcement-thumb {
+		min-height: 210px;
 	}
 
 	.sim-keliling-card {

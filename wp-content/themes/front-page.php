@@ -105,6 +105,47 @@ $fallback_news = array(
 		</div>
 	</section>
 
+	<section class="section announcement-section" aria-labelledby="announcement-title">
+		<div class="section-head">
+			<div>
+				<p class="section-eyebrow">Informasi Resmi</p>
+				<h2 id="announcement-title">Pengumuman</h2>
+				<p>Informasi terbaru dan pemberitahuan resmi Satlantas Polres Ponorogo.</p>
+			</div>
+			<a class="button-primary" href="<?php echo esc_url( get_post_type_archive_link( 'pengumuman' ) ); ?>">Lihat Semua</a>
+		</div>
+		<div class="announcement-grid">
+			<?php
+			$home_pengumuman_query = satlantas_get_active_pengumuman( 3 );
+			?>
+			<?php if ( $home_pengumuman_query->have_posts() ) : ?>
+				<?php while ( $home_pengumuman_query->have_posts() ) : $home_pengumuman_query->the_post(); ?>
+					<?php
+					$tanggal_mulai = get_post_meta( get_the_ID(), 'tanggal_mulai', true );
+					$prioritas     = get_post_meta( get_the_ID(), 'prioritas', true );
+					?>
+					<article <?php post_class( 'announcement-card' ); ?>>
+						<div class="announcement-card__meta">
+							<time datetime="<?php echo esc_attr( $tanggal_mulai ? $tanggal_mulai : get_the_date( 'Y-m-d' ) ); ?>">
+								<?php echo esc_html( $tanggal_mulai ? satlantas_format_pengumuman_date( $tanggal_mulai ) : get_the_date( 'd M Y' ) ); ?>
+							</time>
+							<?php if ( 'tinggi' === $prioritas ) : ?>
+								<span><?php esc_html_e( 'Prioritas', 'satlantas-ponorogo' ); ?></span>
+							<?php endif; ?>
+						</div>
+						<h3><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
+						<p><?php echo satlantas_excerpt( 18 ); ?></p>
+						<a class="read-more" href="<?php the_permalink(); ?>"><?php esc_html_e( 'Selengkapnya', 'satlantas-ponorogo' ); ?></a>
+					</article>
+				<?php endwhile; wp_reset_postdata(); ?>
+			<?php else : ?>
+				<article class="announcement-empty">
+					<p><?php esc_html_e( 'Belum ada pengumuman aktif saat ini.', 'satlantas-ponorogo' ); ?></p>
+				</article>
+			<?php endif; ?>
+		</div>
+	</section>
+
 	<section class="public-services" aria-labelledby="public-title">
 		<p class="section-eyebrow">Layanan</p>
 		<h2 id="public-title">Publik</h2>
