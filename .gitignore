@@ -19,3 +19,5 @@ local-xdebuginfo.php
 # OS files
 Thumbs.db
 .DS_Store
+
+wp-config.php
