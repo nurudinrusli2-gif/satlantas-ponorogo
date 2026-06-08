@@ -883,6 +883,122 @@ a.news-thumb img {
 	line-height: 1.32;
 }
 
+.location-item small {
+	display: block;
+	margin-top: 6px;
+	color: var(--blue-dark);
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.location-empty {
+	padding: 20px 0;
+	border-bottom: 1px solid #d8e5f1;
+}
+
+.location-empty p {
+	margin: 0;
+	color: #627083;
+	font-size: 13px;
+}
+
+.location-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 22px;
+	margin-top: 8px;
+}
+
+.location-card {
+	overflow: hidden;
+	background: #fff;
+	border: 1px solid rgba(15, 141, 244, 0.14);
+	border-radius: 8px;
+	box-shadow: 0 12px 28px rgba(28, 44, 68, 0.1);
+}
+
+.location-thumb {
+	display: block;
+	width: 100%;
+	aspect-ratio: 1.65 / 1;
+	background: #e8edf2;
+}
+
+.location-thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.location-card__body {
+	display: grid;
+	gap: 14px;
+	padding: 22px;
+}
+
+.location-card h2 {
+	margin: 0;
+	color: var(--blue-dark);
+	font-size: 20px;
+	line-height: 1.24;
+}
+
+.location-card p {
+	margin: 0;
+	color: #5a6572;
+	font-size: 13px;
+	line-height: 1.55;
+}
+
+.location-meta {
+	display: grid;
+	gap: 8px;
+}
+
+.location-meta span {
+	display: grid;
+	gap: 3px;
+	color: #5a6572;
+	font-size: 12px;
+}
+
+.location-meta strong,
+.location-detail__item strong {
+	color: var(--blue-dark);
+	font-size: 12px;
+	text-transform: uppercase;
+}
+
+.location-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+}
+
+.location-detail {
+	display: grid;
+	gap: 18px;
+	margin-top: 24px;
+}
+
+.location-detail__item {
+	display: grid;
+	gap: 8px;
+	padding: 18px;
+	background: var(--blue-soft);
+	border-radius: 8px;
+}
+
+.location-detail__item p {
+	margin: 0;
+	color: #4d5968;
+}
+
+.location-map-button {
+	justify-self: start;
+}
+
 .vehicle-section {
 	padding-top: 10px;
 	padding-bottom: 44px;
@@ -1532,6 +1648,7 @@ a.news-thumb img {
 	.news-grid,
 	.public-grid,
 	.announcement-grid,
+	.location-grid,
 	.sim-keliling-grid,
 	.cctv-grid,
 	.help-card-row {

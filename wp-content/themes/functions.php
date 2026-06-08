@@ -604,3 +604,199 @@ function satlantas_order_pengumuman_archive( $query ) {
 	$query->set( 'meta_query', satlantas_get_active_pengumuman_meta_query() );
 }
 add_action( 'pre_get_posts', 'satlantas_order_pengumuman_archive' );
+
+/**
+ * Registers service locations managed from the WordPress dashboard.
+ */
+function satlantas_register_lokasi_layanan_post_type() {
+	register_post_type(
+		'lokasi_layanan',
+		array(
+			'labels'       => array(
+				'name'               => esc_html__( 'Lokasi Layanan', 'satlantas-ponorogo' ),
+				'singular_name'      => esc_html__( 'Lokasi Layanan', 'satlantas-ponorogo' ),
+				'menu_name'          => esc_html__( 'Lokasi Layanan', 'satlantas-ponorogo' ),
+				'add_new_item'       => esc_html__( 'Tambah Lokasi Layanan', 'satlantas-ponorogo' ),
+				'edit_item'          => esc_html__( 'Edit Lokasi Layanan', 'satlantas-ponorogo' ),
+				'new_item'           => esc_html__( 'Lokasi Layanan Baru', 'satlantas-ponorogo' ),
+				'view_item'          => esc_html__( 'Lihat Lokasi Layanan', 'satlantas-ponorogo' ),
+				'search_items'       => esc_html__( 'Cari Lokasi Layanan', 'satlantas-ponorogo' ),
+				'not_found'          => esc_html__( 'Belum ada lokasi layanan.', 'satlantas-ponorogo' ),
+				'not_found_in_trash' => esc_html__( 'Tidak ada lokasi layanan di sampah.', 'satlantas-ponorogo' ),
+			),
+			'public'       => true,
+			'has_archive'  => true,
+			'menu_icon'    => 'dashicons-location',
+			'rewrite'      => array( 'slug' => 'lokasi-layanan' ),
+			'supports'     => array( 'title', 'thumbnail', 'page-attributes' ),
+			'show_in_rest' => true,
+		)
+	);
+}
+add_action( 'init', 'satlantas_register_lokasi_layanan_post_type' );
+
+/**
+ * Flushes rewrite rules once after Lokasi Layanan is registered.
+ */
+function satlantas_maybe_flush_lokasi_layanan_rewrites() {
+	$rewrite_version = 'lokasi-layanan-1';
+
+	if ( get_option( 'satlantas_lokasi_layanan_rewrite_version' ) === $rewrite_version ) {
+		return;
+	}
+
+	flush_rewrite_rules();
+	update_option( 'satlantas_lokasi_layanan_rewrite_version', $rewrite_version );
+}
+add_action( 'init', 'satlantas_maybe_flush_lokasi_layanan_rewrites', 20 );
+
+/**
+ * Adds service location details to the admin editor.
+ */
+function satlantas_add_lokasi_layanan_meta_box() {
+	add_meta_box(
+		'satlantas_lokasi_layanan_details',
+		esc_html__( 'Detail Lokasi Layanan', 'satlantas-ponorogo' ),
+		'satlantas_render_lokasi_layanan_meta_box',
+		'lokasi_layanan',
+		'normal',
+		'high'
+	);
+}
+add_action( 'add_meta_boxes', 'satlantas_add_lokasi_layanan_meta_box' );
+
+/**
+ * Renders location address, maps, hours, phone, and status fields.
+ *
+ * @param WP_Post $post Current Lokasi Layanan post.
+ */
+function satlantas_render_lokasi_layanan_meta_box( $post ) {
+	wp_nonce_field( 'satlantas_save_lokasi_layanan_meta', 'satlantas_lokasi_layanan_nonce' );
+
+	$alamat          = get_post_meta( $post->ID, 'alamat', true );
+	$maps_url        = get_post_meta( $post->ID, 'maps_url', true );
+	$jam_operasional = get_post_meta( $post->ID, 'jam_operasional', true );
+	$nomor_telepon   = get_post_meta( $post->ID, 'nomor_telepon', true );
+	$status          = get_post_meta( $post->ID, 'status', true ) ?: 'aktif';
+	?>
+	<p>
+		<label for="satlantas-lokasi-alamat"><strong><?php esc_html_e( 'Alamat', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<textarea id="satlantas-lokasi-alamat" name="satlantas_lokasi_layanan[alamat]" rows="3" class="widefat"><?php echo esc_textarea( $alamat ); ?></textarea>
+	</p>
+	<p>
+		<label for="satlantas-lokasi-maps-url"><strong><?php esc_html_e( 'Link Google Maps', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-lokasi-maps-url" type="url" name="satlantas_lokasi_layanan[maps_url]" value="<?php echo esc_url( $maps_url ); ?>" class="widefat" placeholder="https://maps.google.com/...">
+	</p>
+	<p>
+		<label for="satlantas-lokasi-jam"><strong><?php esc_html_e( 'Jam Operasional', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-lokasi-jam" type="text" name="satlantas_lokasi_layanan[jam_operasional]" value="<?php echo esc_attr( $jam_operasional ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: Senin - Jumat, 08.00 - 14.00 WIB', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-lokasi-telepon"><strong><?php esc_html_e( 'Nomor Telepon', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-lokasi-telepon" type="text" name="satlantas_lokasi_layanan[nomor_telepon]" value="<?php echo esc_attr( $nomor_telepon ); ?>" class="widefat">
+	</p>
+	<p>
+		<label for="satlantas-lokasi-status"><strong><?php esc_html_e( 'Status', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<select id="satlantas-lokasi-status" name="satlantas_lokasi_layanan[status]" class="widefat">
+			<option value="aktif" <?php selected( $status, 'aktif' ); ?>><?php esc_html_e( 'Aktif', 'satlantas-ponorogo' ); ?></option>
+			<option value="nonaktif" <?php selected( $status, 'nonaktif' ); ?>><?php esc_html_e( 'Nonaktif', 'satlantas-ponorogo' ); ?></option>
+		</select>
+	</p>
+	<?php
+}
+
+/**
+ * Saves service location metadata.
+ *
+ * @param int $post_id Current post ID.
+ */
+function satlantas_save_lokasi_layanan_meta( $post_id ) {
+	if (
+		! isset( $_POST['satlantas_lokasi_layanan_nonce'] ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['satlantas_lokasi_layanan_nonce'] ) ), 'satlantas_save_lokasi_layanan_meta' )
+	) {
+		return;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	$fields = isset( $_POST['satlantas_lokasi_layanan'] ) ? (array) wp_unslash( $_POST['satlantas_lokasi_layanan'] ) : array();
+
+	$sanitized = array(
+		'alamat'          => isset( $fields['alamat'] ) ? sanitize_textarea_field( $fields['alamat'] ) : '',
+		'maps_url'        => isset( $fields['maps_url'] ) ? esc_url_raw( $fields['maps_url'] ) : '',
+		'jam_operasional' => isset( $fields['jam_operasional'] ) ? sanitize_text_field( $fields['jam_operasional'] ) : '',
+		'nomor_telepon'   => isset( $fields['nomor_telepon'] ) ? sanitize_text_field( $fields['nomor_telepon'] ) : '',
+		'status'          => ( isset( $fields['status'] ) && 'nonaktif' === $fields['status'] ) ? 'nonaktif' : 'aktif',
+	);
+
+	foreach ( $sanitized as $key => $value ) {
+		update_post_meta( $post_id, $key, $value );
+	}
+}
+add_action( 'save_post_lokasi_layanan', 'satlantas_save_lokasi_layanan_meta' );
+
+/**
+ * Returns active service locations ordered for public display.
+ *
+ * @param int $posts_per_page Number of locations to fetch.
+ * @return WP_Query
+ */
+function satlantas_get_active_locations( $posts_per_page = -1 ) {
+	return new WP_Query(
+		array(
+			'post_type'      => 'lokasi_layanan',
+			'posts_per_page' => $posts_per_page,
+			'orderby'        => array(
+				'menu_order' => 'ASC',
+				'title'      => 'ASC',
+			),
+			'order'          => 'ASC',
+			'meta_query'     => array(
+				array(
+					'key'     => 'status',
+					'value'   => 'aktif',
+					'compare' => '=',
+				),
+			),
+		)
+	);
+}
+
+/**
+ * Makes the Lokasi Layanan archive show active locations in dashboard order.
+ *
+ * @param WP_Query $query Current query object.
+ */
+function satlantas_order_lokasi_layanan_archive( $query ) {
+	if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'lokasi_layanan' ) ) {
+		return;
+	}
+
+	$query->set( 'posts_per_page', 12 );
+	$query->set(
+		'orderby',
+		array(
+			'menu_order' => 'ASC',
+			'title'      => 'ASC',
+		)
+	);
+	$query->set( 'order', 'ASC' );
+	$query->set(
+		'meta_query',
+		array(
+			array(
+				'key'     => 'status',
+				'value'   => 'aktif',
+				'compare' => '=',
+			),
+		)
+	);
+}
+add_action( 'pre_get_posts', 'satlantas_order_lokasi_layanan_archive' );

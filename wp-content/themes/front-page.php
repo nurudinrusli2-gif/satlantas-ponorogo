@@ -227,26 +227,40 @@ $fallback_news = array(
 			<div class="location-list">
 				<div class="list-head">
 					<h3>Daftar Lokasi Pelayanan</h3>
-					<a class="button-primary" href="#">Lihat Semua</a>
+					<a class="button-primary" href="<?php echo esc_url( get_post_type_archive_link( 'lokasi_layanan' ) ); ?>">Lihat Semua</a>
 				</div>
 				<?php
-				$locations = array(
-					'Kantor Satlantas Polres Ponorogo',
-					'SAMSAT Ponorogo',
-					'Gerai SIM Keliling (Senin-Selasa)',
-					'Gerai SAMSAT Keliling (Senin-Selasa)',
-					'Gerai SIM Keliling (Senin-Selasa)',
-				);
-				foreach ( $locations as $location ) :
-					?>
-					<div class="location-item">
-						<div>
-							<strong><?php echo esc_html( $location ); ?></strong>
-							<p>Jl. Bhayangkara No. 60, Bangunsari, Kec. Ponorogo, Kabupaten Ponorogo, Jawa Timur 63413</p>
+				$locations_query = satlantas_get_active_locations( 5 );
+				?>
+				<?php if ( $locations_query->have_posts() ) : ?>
+					<?php while ( $locations_query->have_posts() ) : $locations_query->the_post(); ?>
+						<?php
+						$alamat          = get_post_meta( get_the_ID(), 'alamat', true );
+						$maps_url        = get_post_meta( get_the_ID(), 'maps_url', true );
+						$jam_operasional = get_post_meta( get_the_ID(), 'jam_operasional', true );
+						?>
+						<div class="location-item">
+							<div>
+								<strong><?php the_title(); ?></strong>
+								<?php if ( $alamat ) : ?>
+									<p><?php echo esc_html( $alamat ); ?></p>
+								<?php endif; ?>
+								<?php if ( $jam_operasional ) : ?>
+									<small><?php echo esc_html( $jam_operasional ); ?></small>
+								<?php endif; ?>
+							</div>
+							<?php if ( $maps_url ) : ?>
+								<a href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener">Lihat Peta</a>
+							<?php else : ?>
+								<a href="<?php the_permalink(); ?>">Detail</a>
+							<?php endif; ?>
 						</div>
-						<a href="#">Lihat Peta</a>
+					<?php endwhile; wp_reset_postdata(); ?>
+				<?php else : ?>
+					<div class="location-empty">
+						<p><?php esc_html_e( 'Belum ada lokasi layanan aktif saat ini.', 'satlantas-ponorogo' ); ?></p>
 					</div>
-				<?php endforeach; ?>
+				<?php endif; ?>
 			</div>
 		</div>
 	</section>
