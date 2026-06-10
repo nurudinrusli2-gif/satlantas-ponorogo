@@ -90,7 +90,7 @@ while ( have_posts() ) :
 			</div>
 			<a class="button-primary" href="<?php echo esc_url( get_post_type_archive_link( 'sim_keliling' ) ); ?>">Lihat Semua</a>
 		</div>
-		<div class="sim-keliling-list sim-keliling-list--compact">
+		<div class="sim-keliling-list sim-keliling-list--compact cpt-card-list">
 			<?php
 			// Fetch five active schedules nearest to today for the SIM service page.
 			$sim_keliling_query = satlantas_get_upcoming_sim_keliling( 5 );
@@ -103,24 +103,31 @@ while ( have_posts() ) :
 					$alamat   = get_post_meta( get_the_ID(), 'alamat', true );
 					$maps_url = get_post_meta( get_the_ID(), 'maps_url', true );
 					?>
-					<article <?php post_class( 'sim-keliling-card' ); ?>>
+					<article <?php post_class( 'sim-keliling-card cpt-card cpt-card--schedule' ); ?>>
 						<time datetime="<?php echo esc_attr( $tanggal ); ?>"><?php echo esc_html( satlantas_format_sim_keliling_date( $tanggal ) ); ?></time>
 						<div class="sim-keliling-card__body">
+							<div class="cpt-meta">
+								<span class="cpt-badge cpt-badge--success">Aktif</span>
+								<?php if ( $jam ) : ?>
+									<span><?php echo esc_html( $jam ); ?></span>
+								<?php endif; ?>
+							</div>
 							<h3><?php the_title(); ?></h3>
-							<?php if ( $jam ) : ?>
-								<p><strong>Jam:</strong> <?php echo esc_html( $jam ); ?></p>
-							<?php endif; ?>
 							<?php if ( $alamat ) : ?>
 								<p><strong>Alamat:</strong> <?php echo esc_html( $alamat ); ?></p>
 							<?php endif; ?>
 						</div>
-						<?php if ( $maps_url ) : ?>
-							<a class="button-primary sim-keliling-map" href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener">Lihat Maps</a>
-						<?php endif; ?>
+						<div class="cpt-actions">
+							<?php if ( $maps_url ) : ?>
+								<a class="button-primary sim-keliling-map" href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener">Lihat Maps</a>
+							<?php endif; ?>
+						</div>
 					</article>
 				<?php endwhile; wp_reset_postdata(); ?>
 			<?php else : ?>
-				<article class="sim-keliling-empty">
+				<article class="sim-keliling-empty cpt-empty">
+					<span class="cpt-empty__icon">SIM</span>
+					<h3><?php esc_html_e( 'Belum ada jadwal aktif', 'satlantas-ponorogo' ); ?></h3>
 					<p><?php esc_html_e( 'Belum ada jadwal SIM Keliling aktif.', 'satlantas-ponorogo' ); ?></p>
 				</article>
 			<?php endif; ?>

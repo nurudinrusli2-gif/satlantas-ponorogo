@@ -79,7 +79,7 @@ while ( have_posts() ) :
 		$struktur_query = satlantas_get_active_struktur_organisasi();
 		?>
 		<?php if ( $struktur_query->have_posts() ) : ?>
-			<div class="info-card-grid">
+			<div class="info-card-grid struktur-grid">
 				<?php while ( $struktur_query->have_posts() ) : $struktur_query->the_post(); ?>
 					<?php
 					$nama_jabatan = get_post_meta( get_the_ID(), 'nama_jabatan', true );
@@ -88,20 +88,22 @@ while ( have_posts() ) :
 					$photo_url    = get_the_post_thumbnail_url( get_the_ID(), 'medium' );
 					$photo_style  = $photo_url ? 'background-image:url(' . esc_url( $photo_url ) . ');background-size:cover;background-position:center;background-color:#fff;' : '';
 					?>
-					<article <?php post_class( 'info-card' ); ?>>
-						<span class="service-icon" style="<?php echo esc_attr( $photo_style ); ?>">
+					<article <?php post_class( 'info-card struktur-card cpt-card' ); ?>>
+						<span class="service-icon struktur-photo" style="<?php echo esc_attr( $photo_style ); ?>">
 							<?php if ( ! $photo_url ) : ?>
 								<?php satlantas_icon( 'info' ); ?>
 							<?php endif; ?>
 						</span>
+						<span class="cpt-badge cpt-badge--success"><?php esc_html_e( 'Aktif', 'satlantas-ponorogo' ); ?></span>
 						<h3><?php echo esc_html( $nama_jabatan ?: get_the_title() ); ?></h3>
 						<p><?php echo esc_html( $nama_pejabat ? $nama_pejabat : __( 'Nama pejabat dapat diperbarui oleh administrator.', 'satlantas-ponorogo' ) ); ?></p>
-						<p><?php echo esc_html( sprintf( __( 'Urutan: %s', 'satlantas-ponorogo' ), $urutan ? $urutan : '-' ) ); ?></p>
+						<small><?php echo esc_html( sprintf( __( 'Urutan struktur: %s', 'satlantas-ponorogo' ), $urutan ? $urutan : '-' ) ); ?></small>
 					</article>
 				<?php endwhile; wp_reset_postdata(); ?>
 			</div>
 		<?php else : ?>
-			<article class="info-panel">
+			<article class="info-panel cpt-empty">
+				<span class="cpt-empty__icon"><?php esc_html_e( 'ORG', 'satlantas-ponorogo' ); ?></span>
 				<p class="section-eyebrow">Organisasi</p>
 				<h2>Struktur Organisasi</h2>
 				<p>Belum ada data struktur organisasi aktif. Administrator dapat menambahkannya melalui menu Struktur Organisasi di Dashboard WordPress.</p>

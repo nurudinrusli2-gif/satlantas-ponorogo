@@ -20,6 +20,12 @@ get_header();
 			<header class="entry-header">
 				<p class="section-eyebrow"><?php esc_html_e( 'Lokasi Layanan', 'satlantas-ponorogo' ); ?></p>
 				<h1><?php the_title(); ?></h1>
+				<div class="cpt-meta">
+					<span class="cpt-badge cpt-badge--success"><?php esc_html_e( 'Aktif', 'satlantas-ponorogo' ); ?></span>
+					<?php if ( $jam_operasional ) : ?>
+						<span><?php echo esc_html( $jam_operasional ); ?></span>
+					<?php endif; ?>
+				</div>
 			</header>
 
 			<?php if ( has_post_thumbnail() ) : ?>
@@ -28,33 +34,36 @@ get_header();
 				</div>
 			<?php endif; ?>
 
-			<div class="location-detail">
-				<?php if ( $alamat ) : ?>
-					<div class="location-detail__item">
-						<strong><?php esc_html_e( 'Alamat', 'satlantas-ponorogo' ); ?></strong>
-						<p><?php echo esc_html( $alamat ); ?></p>
-					</div>
-				<?php endif; ?>
+			<div class="cpt-single-layout">
+				<aside class="cpt-meta-panel" aria-label="<?php esc_attr_e( 'Metadata lokasi layanan', 'satlantas-ponorogo' ); ?>">
+					<h2><?php esc_html_e( 'Detail Lokasi', 'satlantas-ponorogo' ); ?></h2>
+					<?php if ( $jam_operasional ) : ?>
+						<div class="cpt-meta-panel__item">
+							<span><?php esc_html_e( 'Jam Operasional', 'satlantas-ponorogo' ); ?></span>
+							<strong><?php echo esc_html( $jam_operasional ); ?></strong>
+						</div>
+					<?php endif; ?>
+					<?php if ( $nomor_telepon ) : ?>
+						<div class="cpt-meta-panel__item">
+							<span><?php esc_html_e( 'Nomor Telepon', 'satlantas-ponorogo' ); ?></span>
+							<strong><?php echo esc_html( $nomor_telepon ); ?></strong>
+						</div>
+					<?php endif; ?>
+					<?php if ( $maps_url ) : ?>
+						<a class="button-primary location-map-button" href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener">
+							<?php esc_html_e( 'Lihat Google Maps', 'satlantas-ponorogo' ); ?>
+						</a>
+					<?php endif; ?>
+				</aside>
 
-				<?php if ( $jam_operasional ) : ?>
-					<div class="location-detail__item">
-						<strong><?php esc_html_e( 'Jam Operasional', 'satlantas-ponorogo' ); ?></strong>
-						<p><?php echo esc_html( $jam_operasional ); ?></p>
-					</div>
-				<?php endif; ?>
-
-				<?php if ( $nomor_telepon ) : ?>
-					<div class="location-detail__item">
-						<strong><?php esc_html_e( 'Nomor Telepon', 'satlantas-ponorogo' ); ?></strong>
-						<p><?php echo esc_html( $nomor_telepon ); ?></p>
-					</div>
-				<?php endif; ?>
-
-				<?php if ( $maps_url ) : ?>
-					<a class="button-primary location-map-button" href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener">
-						<?php esc_html_e( 'Lihat Google Maps', 'satlantas-ponorogo' ); ?>
-					</a>
-				<?php endif; ?>
+				<div class="location-detail cpt-main-content">
+					<?php if ( $alamat ) : ?>
+						<div class="location-detail__item">
+							<strong><?php esc_html_e( 'Alamat', 'satlantas-ponorogo' ); ?></strong>
+							<p><?php echo esc_html( $alamat ); ?></p>
+						</div>
+					<?php endif; ?>
+				</div>
 			</div>
 		</article>
 	<?php endwhile; ?>

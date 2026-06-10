@@ -25,8 +25,8 @@
 				<?php if ( has_custom_logo() ) : ?>
 					<?php the_custom_logo(); ?>
 				<?php else : ?>
-					<img src="<?php echo satlantas_asset( 'assets/images/logo-polres.png' ); ?>" alt="<?php esc_attr_e( 'Polres Ponorogo', 'satlantas-ponorogo' ); ?>">
-					<img src="<?php echo satlantas_asset( 'assets/images/logo-satlantas.png' ); ?>" alt="<?php esc_attr_e( 'Satlantas Ponorogo', 'satlantas-ponorogo' ); ?>">
+					<img class="brand-logo brand-logo--polda" src="<?php echo satlantas_asset( 'assets/images/logo-polda-jatim.png' ); ?>" alt="<?php esc_attr_e( 'Polda Jawa Timur', 'satlantas-ponorogo' ); ?>">
+					<img class="brand-logo brand-logo--satlantas" src="<?php echo satlantas_asset( 'assets/images/logo-satlantas.png' ); ?>" alt="<?php esc_attr_e( 'Satlantas Polres Ponorogo', 'satlantas-ponorogo' ); ?>">
 				<?php endif; ?>
 			</a>
 		</div>
