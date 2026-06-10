@@ -2084,6 +2084,36 @@ a.news-thumb img {
 	font-size: 15px;
 }
 
+.kontak-map-placeholder {
+	display: grid;
+	place-items: center;
+	min-height: 280px;
+	padding: 28px;
+	color: var(--blue-dark);
+	background:
+		linear-gradient(135deg, rgba(15, 141, 244, 0.11), rgba(255, 255, 255, 0.68)),
+		var(--blue-soft);
+	border: 1px dashed rgba(15, 141, 244, 0.45);
+	border-radius: 12px;
+	text-align: center;
+}
+
+.kontak-map-placeholder span,
+.kontak-map-placeholder small {
+	display: block;
+}
+
+.kontak-map-placeholder span {
+	font-size: 18px;
+	font-weight: 800;
+}
+
+.kontak-map-placeholder small {
+	margin-top: 6px;
+	color: #5c6877;
+	font-size: 13px;
+}
+
 .sim-schedule,
 .sim-contact,
 .stnk-schedule,

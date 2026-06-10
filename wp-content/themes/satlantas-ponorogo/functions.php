@@ -104,18 +104,50 @@ function satlantas_excerpt( $length = 18 ) {
 }
 
 /**
+ * Returns a URL for a page by slug, or the expected permalink pattern.
+ *
+ * @param string $slug Page slug.
+ * @return string
+ */
+function satlantas_page_url_by_slug( $slug ) {
+	$page = get_page_by_path( $slug );
+
+	return $page ? get_permalink( $page ) : home_url( '/' . trim( $slug, '/' ) . '/' );
+}
+
+/**
+ * Returns the canonical main menu mapping.
+ *
+ * @return array
+ */
+function satlantas_primary_nav_map() {
+	return array(
+		'Beranda'   => home_url( '/' ),
+		'Profil'    => satlantas_page_url_by_slug( 'profil' ),
+		'Layanan'   => satlantas_page_url_by_slug( 'info-layanan' ),
+		'Publikasi' => get_post_type_archive_link( 'pengumuman' ),
+		'Berita'    => get_permalink( get_option( 'page_for_posts' ) ) ?: home_url( '/berita/' ),
+		'Regulasi'  => satlantas_regulasi_url(),
+		'Kontak'    => satlantas_page_url_by_slug( 'kontak' ),
+	);
+}
+
+/**
+ * Returns the canonical regulations URL.
+ *
+ * @return string
+ */
+function satlantas_regulasi_url() {
+	$page = get_page_by_path( 'regulasi' );
+
+	return $page ? get_permalink( $page ) : ( get_post_type_archive_link( 'regulasi' ) ?: home_url( '/regulasi/' ) );
+}
+
+/**
  * Fallback primary navigation.
  */
 function satlantas_fallback_menu() {
-	$items = array(
-		'Beranda'  => home_url( '/' ),
-		'Profil'   => home_url( '/profil/' ),
-		'Layanan'  => home_url( '/layanan/' ),
-		'Publikasi' => home_url( '/publikasi/' ),
-		'Berita'   => home_url( '/berita/' ),
-		'Regulasi' => home_url( '/regulasi/' ),
-		'Kontak'   => home_url( '/kontak/' ),
-	);
+	$items = satlantas_primary_nav_map();
 
 	echo '<ul id="primary-menu" class="menu nav-menu">';
 	foreach ( $items as $label => $url ) {
@@ -127,6 +159,33 @@ function satlantas_fallback_menu() {
 	}
 	echo '</ul>';
 }
+
+/**
+ * Normalizes primary navigation items so assigned menus follow the canonical mapping.
+ *
+ * @param array    $items Nav menu items.
+ * @param stdClass  $menu  Menu object.
+ * @param array     $args  Menu args.
+ * @return array
+ */
+function satlantas_normalize_primary_menu_items( $items, $menu, $args ) {
+	if ( empty( $args->theme_location ) || 'primary' !== $args->theme_location ) {
+		return $items;
+	}
+
+	$map = satlantas_primary_nav_map();
+
+	foreach ( $items as $item ) {
+		$label = trim( wp_strip_all_tags( $item->title ) );
+
+		if ( isset( $map[ $label ] ) ) {
+			$item->url = $map[ $label ];
+		}
+	}
+
+	return $items;
+}
+add_filter( 'wp_nav_menu_objects', 'satlantas_normalize_primary_menu_items', 10, 3 );
 
 /**
  * Registers the SIM Keliling schedule post type used by the public schedule pages.
@@ -800,3 +859,373 @@ function satlantas_order_lokasi_layanan_archive( $query ) {
 	);
 }
 add_action( 'pre_get_posts', 'satlantas_order_lokasi_layanan_archive' );
+
+/**
+ * Registers organizational structure managed from the WordPress dashboard.
+ */
+function satlantas_register_struktur_organisasi_post_type() {
+	register_post_type(
+		'struktur_organisasi',
+		array(
+			'labels'       => array(
+				'name'               => esc_html__( 'Struktur Organisasi', 'satlantas-ponorogo' ),
+				'singular_name'      => esc_html__( 'Struktur Organisasi', 'satlantas-ponorogo' ),
+				'menu_name'          => esc_html__( 'Struktur Organisasi', 'satlantas-ponorogo' ),
+				'add_new_item'       => esc_html__( 'Tambah Struktur Organisasi', 'satlantas-ponorogo' ),
+				'edit_item'          => esc_html__( 'Edit Struktur Organisasi', 'satlantas-ponorogo' ),
+				'new_item'           => esc_html__( 'Struktur Organisasi Baru', 'satlantas-ponorogo' ),
+				'view_item'          => esc_html__( 'Lihat Struktur Organisasi', 'satlantas-ponorogo' ),
+				'search_items'       => esc_html__( 'Cari Struktur Organisasi', 'satlantas-ponorogo' ),
+				'not_found'          => esc_html__( 'Belum ada data struktur organisasi.', 'satlantas-ponorogo' ),
+				'not_found_in_trash' => esc_html__( 'Tidak ada data struktur organisasi di sampah.', 'satlantas-ponorogo' ),
+			),
+			'public'       => true,
+			'has_archive'  => false,
+			'menu_icon'    => 'dashicons-groups',
+			'rewrite'      => array( 'slug' => 'struktur-organisasi' ),
+			'supports'     => array( 'title', 'thumbnail' ),
+			'show_in_rest' => true,
+		)
+	);
+}
+add_action( 'init', 'satlantas_register_struktur_organisasi_post_type' );
+
+/**
+ * Adds organization structure fields to the admin editor.
+ */
+function satlantas_add_struktur_organisasi_meta_box() {
+	add_meta_box(
+		'satlantas_struktur_organisasi_details',
+		esc_html__( 'Detail Struktur Organisasi', 'satlantas-ponorogo' ),
+		'satlantas_render_struktur_organisasi_meta_box',
+		'struktur_organisasi',
+		'normal',
+		'high'
+	);
+}
+add_action( 'add_meta_boxes', 'satlantas_add_struktur_organisasi_meta_box' );
+
+/**
+ * Renders organizational role, officer name, order, status, and photo note.
+ *
+ * @param WP_Post $post Current Struktur Organisasi post.
+ */
+function satlantas_render_struktur_organisasi_meta_box( $post ) {
+	wp_nonce_field( 'satlantas_save_struktur_organisasi_meta', 'satlantas_struktur_organisasi_nonce' );
+
+	$nama_jabatan = get_post_meta( $post->ID, 'nama_jabatan', true );
+	$nama_pejabat = get_post_meta( $post->ID, 'nama_pejabat', true );
+	$urutan       = get_post_meta( $post->ID, 'urutan', true );
+	$status       = get_post_meta( $post->ID, 'status', true ) ?: 'aktif';
+	?>
+	<p>
+		<label for="satlantas-struktur-jabatan"><strong><?php esc_html_e( 'Nama Jabatan', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-struktur-jabatan" type="text" name="satlantas_struktur_organisasi[nama_jabatan]" value="<?php echo esc_attr( $nama_jabatan ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: Kasat Lantas', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-struktur-pejabat"><strong><?php esc_html_e( 'Nama Pejabat', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-struktur-pejabat" type="text" name="satlantas_struktur_organisasi[nama_pejabat]" value="<?php echo esc_attr( $nama_pejabat ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: AKP Nama Lengkap', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-struktur-urutan"><strong><?php esc_html_e( 'Urutan', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-struktur-urutan" type="number" min="0" step="1" name="satlantas_struktur_organisasi[urutan]" value="<?php echo esc_attr( $urutan ); ?>" class="small-text" placeholder="1">
+	</p>
+	<p>
+		<label for="satlantas-struktur-status"><strong><?php esc_html_e( 'Status Aktif', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<select id="satlantas-struktur-status" name="satlantas_struktur_organisasi[status]" class="widefat">
+			<option value="aktif" <?php selected( $status, 'aktif' ); ?>><?php esc_html_e( 'Aktif', 'satlantas-ponorogo' ); ?></option>
+			<option value="nonaktif" <?php selected( $status, 'nonaktif' ); ?>><?php esc_html_e( 'Nonaktif', 'satlantas-ponorogo' ); ?></option>
+		</select>
+	</p>
+	<p>
+		<strong><?php esc_html_e( 'Foto', 'satlantas-ponorogo' ); ?></strong><br>
+		<span class="description"><?php esc_html_e( 'Gunakan Featured Image untuk foto pejabat. Foto akan ditampilkan otomatis di halaman Profil.', 'satlantas-ponorogo' ); ?></span>
+	</p>
+	<?php
+}
+
+/**
+ * Saves organizational structure metadata.
+ *
+ * @param int $post_id Current post ID.
+ */
+function satlantas_save_struktur_organisasi_meta( $post_id ) {
+	if (
+		! isset( $_POST['satlantas_struktur_organisasi_nonce'] ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['satlantas_struktur_organisasi_nonce'] ) ), 'satlantas_save_struktur_organisasi_meta' )
+	) {
+		return;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	$fields = isset( $_POST['satlantas_struktur_organisasi'] ) ? (array) wp_unslash( $_POST['satlantas_struktur_organisasi'] ) : array();
+
+	$sanitized = array(
+		'nama_jabatan' => isset( $fields['nama_jabatan'] ) ? sanitize_text_field( $fields['nama_jabatan'] ) : '',
+		'nama_pejabat' => isset( $fields['nama_pejabat'] ) ? sanitize_text_field( $fields['nama_pejabat'] ) : '',
+		'urutan'       => isset( $fields['urutan'] ) ? absint( $fields['urutan'] ) : 0,
+		'status'       => ( isset( $fields['status'] ) && 'nonaktif' === $fields['status'] ) ? 'nonaktif' : 'aktif',
+	);
+
+	foreach ( $sanitized as $key => $value ) {
+		update_post_meta( $post_id, $key, $value );
+	}
+}
+add_action( 'save_post_struktur_organisasi', 'satlantas_save_struktur_organisasi_meta' );
+
+/**
+ * Returns active organizational structure items ordered by custom order.
+ *
+ * @param int $posts_per_page Number of items to fetch.
+ * @return WP_Query
+ */
+function satlantas_get_active_struktur_organisasi( $posts_per_page = -1 ) {
+	return new WP_Query(
+		array(
+			'post_type'      => 'struktur_organisasi',
+			'posts_per_page' => $posts_per_page,
+			'meta_key'       => 'urutan',
+			'orderby'        => array(
+				'meta_value_num' => 'ASC',
+				'title'          => 'ASC',
+			),
+			'meta_query'     => array(
+				array(
+					'key'     => 'status',
+					'value'   => 'aktif',
+					'compare' => '=',
+				),
+			),
+		)
+	);
+}
+
+/**
+ * Registers regulations managed from the WordPress dashboard.
+ */
+function satlantas_register_regulasi_post_type() {
+	register_post_type(
+		'regulasi',
+		array(
+			'labels'       => array(
+				'name'               => esc_html__( 'Regulasi', 'satlantas-ponorogo' ),
+				'singular_name'      => esc_html__( 'Regulasi', 'satlantas-ponorogo' ),
+				'menu_name'          => esc_html__( 'Regulasi', 'satlantas-ponorogo' ),
+				'add_new_item'       => esc_html__( 'Tambah Regulasi', 'satlantas-ponorogo' ),
+				'edit_item'          => esc_html__( 'Edit Regulasi', 'satlantas-ponorogo' ),
+				'new_item'           => esc_html__( 'Regulasi Baru', 'satlantas-ponorogo' ),
+				'view_item'          => esc_html__( 'Lihat Regulasi', 'satlantas-ponorogo' ),
+				'search_items'       => esc_html__( 'Cari Regulasi', 'satlantas-ponorogo' ),
+				'not_found'          => esc_html__( 'Belum ada regulasi.', 'satlantas-ponorogo' ),
+				'not_found_in_trash' => esc_html__( 'Tidak ada regulasi di sampah.', 'satlantas-ponorogo' ),
+			),
+			'public'       => true,
+			'has_archive'  => true,
+			'menu_icon'    => 'dashicons-media-document',
+			'rewrite'      => array( 'slug' => 'arsip-regulasi' ),
+			'supports'     => array( 'title', 'editor', 'thumbnail', 'page-attributes' ),
+			'show_in_rest' => true,
+		)
+	);
+}
+add_action( 'init', 'satlantas_register_regulasi_post_type' );
+
+/**
+ * Flushes rewrite rules after the regulations archive is registered.
+ */
+function satlantas_flush_regulasi_rewrites() {
+	satlantas_register_regulasi_post_type();
+	flush_rewrite_rules();
+}
+add_action( 'after_switch_theme', 'satlantas_flush_regulasi_rewrites' );
+
+/**
+ * Flushes rewrite rules once after the regulations feature is added.
+ */
+function satlantas_maybe_flush_regulasi_rewrites() {
+	$rewrite_version = 'regulasi-1';
+
+	if ( get_option( 'satlantas_regulasi_rewrite_version' ) === $rewrite_version ) {
+		return;
+	}
+
+	flush_rewrite_rules();
+	update_option( 'satlantas_regulasi_rewrite_version', $rewrite_version );
+}
+add_action( 'init', 'satlantas_maybe_flush_regulasi_rewrites', 20 );
+
+/**
+ * Adds regulation details to the admin editor.
+ */
+function satlantas_add_regulasi_meta_box() {
+	add_meta_box(
+		'satlantas_regulasi_details',
+		esc_html__( 'Detail Regulasi', 'satlantas-ponorogo' ),
+		'satlantas_render_regulasi_meta_box',
+		'regulasi',
+		'normal',
+		'high'
+	);
+}
+add_action( 'add_meta_boxes', 'satlantas_add_regulasi_meta_box' );
+
+/**
+ * Renders regulation metadata fields.
+ *
+ * @param WP_Post $post Current Regulasi post.
+ */
+function satlantas_render_regulasi_meta_box( $post ) {
+	wp_nonce_field( 'satlantas_save_regulasi_meta', 'satlantas_regulasi_nonce' );
+
+	$nomor_regulasi   = get_post_meta( $post->ID, 'nomor_regulasi', true );
+	$tanggal_regulasi = get_post_meta( $post->ID, 'tanggal_regulasi', true );
+	$kategori_regulasi = get_post_meta( $post->ID, 'kategori_regulasi', true );
+	$file_pdf         = get_post_meta( $post->ID, 'file_pdf', true );
+	$status           = get_post_meta( $post->ID, 'status', true ) ?: 'aktif';
+	?>
+	<p>
+		<label for="satlantas-regulasi-nomor"><strong><?php esc_html_e( 'Nomor Regulasi', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-regulasi-nomor" type="text" name="satlantas_regulasi[nomor_regulasi]" value="<?php echo esc_attr( $nomor_regulasi ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: 12/2026', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-regulasi-tanggal"><strong><?php esc_html_e( 'Tanggal Regulasi', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-regulasi-tanggal" type="date" name="satlantas_regulasi[tanggal_regulasi]" value="<?php echo esc_attr( $tanggal_regulasi ); ?>" class="widefat">
+	</p>
+	<p>
+		<label for="satlantas-regulasi-kategori"><strong><?php esc_html_e( 'Kategori Regulasi', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-regulasi-kategori" type="text" name="satlantas_regulasi[kategori_regulasi]" value="<?php echo esc_attr( $kategori_regulasi ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: Surat Edaran', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-regulasi-pdf"><strong><?php esc_html_e( 'File PDF', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-regulasi-pdf" type="url" name="satlantas_regulasi[file_pdf]" value="<?php echo esc_url( $file_pdf ); ?>" class="widefat" placeholder="https://.../dokumen.pdf">
+	</p>
+	<p>
+		<label for="satlantas-regulasi-status"><strong><?php esc_html_e( 'Status Aktif', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<select id="satlantas-regulasi-status" name="satlantas_regulasi[status]" class="widefat">
+			<option value="aktif" <?php selected( $status, 'aktif' ); ?>><?php esc_html_e( 'Aktif', 'satlantas-ponorogo' ); ?></option>
+			<option value="nonaktif" <?php selected( $status, 'nonaktif' ); ?>><?php esc_html_e( 'Nonaktif', 'satlantas-ponorogo' ); ?></option>
+		</select>
+	</p>
+	<?php
+}
+
+/**
+ * Saves regulation metadata.
+ *
+ * @param int $post_id Current post ID.
+ */
+function satlantas_save_regulasi_meta( $post_id ) {
+	if (
+		! isset( $_POST['satlantas_regulasi_nonce'] ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['satlantas_regulasi_nonce'] ) ), 'satlantas_save_regulasi_meta' )
+	) {
+		return;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	$fields = isset( $_POST['satlantas_regulasi'] ) ? (array) wp_unslash( $_POST['satlantas_regulasi'] ) : array();
+
+	$sanitized = array(
+		'nomor_regulasi'   => isset( $fields['nomor_regulasi'] ) ? sanitize_text_field( $fields['nomor_regulasi'] ) : '',
+		'tanggal_regulasi' => isset( $fields['tanggal_regulasi'] ) ? sanitize_text_field( $fields['tanggal_regulasi'] ) : '',
+		'kategori_regulasi' => isset( $fields['kategori_regulasi'] ) ? sanitize_text_field( $fields['kategori_regulasi'] ) : '',
+		'file_pdf'         => isset( $fields['file_pdf'] ) ? esc_url_raw( $fields['file_pdf'] ) : '',
+		'status'           => ( isset( $fields['status'] ) && 'nonaktif' === $fields['status'] ) ? 'nonaktif' : 'aktif',
+	);
+
+	foreach ( $sanitized as $key => $value ) {
+		update_post_meta( $post_id, $key, $value );
+	}
+}
+add_action( 'save_post_regulasi', 'satlantas_save_regulasi_meta' );
+
+/**
+ * Returns active regulations ordered by newest regulation date.
+ *
+ * @param int $posts_per_page Number of items to fetch.
+ * @return WP_Query
+ */
+function satlantas_get_active_regulasi( $posts_per_page = 10 ) {
+	return new WP_Query(
+		array(
+			'post_type'      => 'regulasi',
+			'posts_per_page' => $posts_per_page,
+			'meta_key'       => 'tanggal_regulasi',
+			'orderby'        => array(
+				'meta_value' => 'DESC',
+				'date'       => 'DESC',
+			),
+			'meta_type'      => 'DATE',
+			'meta_query'     => array(
+				array(
+					'key'     => 'status',
+					'value'   => 'aktif',
+					'compare' => '=',
+				),
+			),
+		)
+	);
+}
+
+/**
+ * Formats regulation dates.
+ *
+ * @param string $date Date in Y-m-d format.
+ * @return string
+ */
+function satlantas_format_regulasi_date( $date ) {
+	if ( empty( $date ) ) {
+		return '';
+	}
+
+	$timestamp = strtotime( $date );
+
+	return $timestamp ? date_i18n( 'd M Y', $timestamp ) : $date;
+}
+
+/**
+ * Makes the regulations archive show active items first.
+ *
+ * @param WP_Query $query Current query object.
+ */
+function satlantas_order_regulasi_archive( $query ) {
+	if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'regulasi' ) ) {
+		return;
+	}
+
+	$query->set( 'posts_per_page', 10 );
+	$query->set( 'meta_key', 'tanggal_regulasi' );
+	$query->set(
+		'orderby',
+		array(
+			'meta_value' => 'DESC',
+			'date'       => 'DESC',
+		)
+	);
+	$query->set( 'meta_type', 'DATE' );
+	$query->set(
+		'meta_query',
+		array(
+			array(
+				'key'     => 'status',
+				'value'   => 'aktif',
+				'compare' => '=',
+			),
+		)
+	);
+}
+add_action( 'pre_get_posts', 'satlantas_order_regulasi_archive' );
