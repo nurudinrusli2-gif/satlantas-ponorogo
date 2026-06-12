@@ -57,7 +57,39 @@ add_action( 'after_setup_theme', 'satlantas_setup' );
  * Enqueue theme styles and scripts.
  */
 function satlantas_scripts() {
-	wp_enqueue_style( 'satlantas-style', get_stylesheet_uri(), array(), SATLANTAS_VERSION );
+	$style_dependencies = array();
+
+	if ( is_front_page() && function_exists( 'satlantas_get_active_location_layanan_data' ) ) {
+		$map_locations = satlantas_get_active_location_layanan_data( -1, true );
+
+		if ( ! empty( $map_locations ) ) {
+			wp_enqueue_style( 'satlantas-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4' );
+			wp_enqueue_script( 'satlantas-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true );
+
+			$style_dependencies[] = 'satlantas-leaflet';
+
+			wp_enqueue_script(
+				'satlantas-locations-map',
+				get_template_directory_uri() . '/assets/js/locations-map.js',
+				array( 'satlantas-leaflet' ),
+				SATLANTAS_VERSION,
+				true
+			);
+
+			// Keep marker data server-rendered so the map needs no external API beyond OSM tiles.
+			wp_localize_script(
+				'satlantas-locations-map',
+				'satlantasLocationsMap',
+				array(
+					'tileUrl'     => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+					'attribution' => '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+					'locations'   => $map_locations,
+				)
+			);
+		}
+	}
+
+	wp_enqueue_style( 'satlantas-style', get_stylesheet_uri(), $style_dependencies, SATLANTAS_VERSION );
 	wp_enqueue_script( 'satlantas-navigation', get_template_directory_uri() . '/assets/js/navigation.js', array(), SATLANTAS_VERSION, true );
 }
 add_action( 'wp_enqueue_scripts', 'satlantas_scripts' );
@@ -725,7 +757,7 @@ function satlantas_add_lokasi_layanan_meta_box() {
 add_action( 'add_meta_boxes', 'satlantas_add_lokasi_layanan_meta_box' );
 
 /**
- * Renders location address, maps, hours, phone, and status fields.
+ * Renders location address, coordinates, maps, hours, phone, and status fields.
  *
  * @param WP_Post $post Current Lokasi Layanan post.
  */
@@ -733,6 +765,8 @@ function satlantas_render_lokasi_layanan_meta_box( $post ) {
 	wp_nonce_field( 'satlantas_save_lokasi_layanan_meta', 'satlantas_lokasi_layanan_nonce' );
 
 	$alamat          = get_post_meta( $post->ID, 'alamat', true );
+	$latitude        = get_post_meta( $post->ID, 'latitude', true );
+	$longitude       = get_post_meta( $post->ID, 'longitude', true );
 	$maps_url        = get_post_meta( $post->ID, 'maps_url', true );
 	$jam_operasional = get_post_meta( $post->ID, 'jam_operasional', true );
 	$nomor_telepon   = get_post_meta( $post->ID, 'nomor_telepon', true );
@@ -741,6 +775,14 @@ function satlantas_render_lokasi_layanan_meta_box( $post ) {
 	<p>
 		<label for="satlantas-lokasi-alamat"><strong><?php esc_html_e( 'Alamat', 'satlantas-ponorogo' ); ?></strong></label><br>
 		<textarea id="satlantas-lokasi-alamat" name="satlantas_lokasi_layanan[alamat]" rows="3" class="widefat"><?php echo esc_textarea( $alamat ); ?></textarea>
+	</p>
+	<p>
+		<label for="satlantas-lokasi-latitude"><strong><?php esc_html_e( 'Latitude', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-lokasi-latitude" type="text" inputmode="decimal" name="satlantas_lokasi_layanan[latitude]" value="<?php echo esc_attr( $latitude ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: -7.8654', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-lokasi-longitude"><strong><?php esc_html_e( 'Longitude', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-lokasi-longitude" type="text" inputmode="decimal" name="satlantas_lokasi_layanan[longitude]" value="<?php echo esc_attr( $longitude ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: 111.4680', 'satlantas-ponorogo' ); ?>">
 	</p>
 	<p>
 		<label for="satlantas-lokasi-maps-url"><strong><?php esc_html_e( 'Link Google Maps', 'satlantas-ponorogo' ); ?></strong></label><br>
@@ -762,6 +804,34 @@ function satlantas_render_lokasi_layanan_meta_box( $post ) {
 		</select>
 	</p>
 	<?php
+}
+
+/**
+ * Sanitizes a coordinate meta value for Leaflet/OpenStreetMap usage.
+ *
+ * Keeps signed decimal values only; out-of-range or non-numeric values are saved
+ * as empty strings so frontend templates can safely skip incomplete markers.
+ *
+ * @param mixed  $value Coordinate value from the admin form.
+ * @param string $type  Coordinate type: latitude or longitude.
+ * @return string
+ */
+function satlantas_sanitize_location_coordinate( $value, $type ) {
+	$value = str_replace( ',', '.', sanitize_text_field( $value ) );
+
+	if ( '' === $value || ! is_numeric( $value ) ) {
+		return '';
+	}
+
+	$coordinate = (float) $value;
+	$min        = 'latitude' === $type ? -90 : -180;
+	$max        = 'latitude' === $type ? 90 : 180;
+
+	if ( $coordinate < $min || $coordinate > $max ) {
+		return '';
+	}
+
+	return rtrim( rtrim( number_format( $coordinate, 8, '.', '' ), '0' ), '.' );
 }
 
 /**
@@ -789,6 +859,8 @@ function satlantas_save_lokasi_layanan_meta( $post_id ) {
 
 	$sanitized = array(
 		'alamat'          => isset( $fields['alamat'] ) ? sanitize_textarea_field( $fields['alamat'] ) : '',
+		'latitude'        => isset( $fields['latitude'] ) ? satlantas_sanitize_location_coordinate( $fields['latitude'], 'latitude' ) : '',
+		'longitude'       => isset( $fields['longitude'] ) ? satlantas_sanitize_location_coordinate( $fields['longitude'], 'longitude' ) : '',
 		'maps_url'        => isset( $fields['maps_url'] ) ? esc_url_raw( $fields['maps_url'] ) : '',
 		'jam_operasional' => isset( $fields['jam_operasional'] ) ? sanitize_text_field( $fields['jam_operasional'] ) : '',
 		'nomor_telepon'   => isset( $fields['nomor_telepon'] ) ? sanitize_text_field( $fields['nomor_telepon'] ) : '',
@@ -800,6 +872,37 @@ function satlantas_save_lokasi_layanan_meta( $post_id ) {
 	}
 }
 add_action( 'save_post_lokasi_layanan', 'satlantas_save_lokasi_layanan_meta' );
+
+/**
+ * Returns normalized Lokasi Layanan metadata for frontend templates.
+ *
+ * Use this helper before rendering Leaflet markers so templates have one stable
+ * shape for address, coordinates, maps URL, hours, phone, and status.
+ *
+ * @param int|WP_Post|null $post Optional post object or ID. Defaults to current post.
+ * @return array
+ */
+function satlantas_get_location_layanan_meta( $post = null ) {
+	$post = get_post( $post );
+
+	if ( ! $post || 'lokasi_layanan' !== $post->post_type ) {
+		return array();
+	}
+
+	$latitude  = get_post_meta( $post->ID, 'latitude', true );
+	$longitude = get_post_meta( $post->ID, 'longitude', true );
+
+	return array(
+		'alamat'          => get_post_meta( $post->ID, 'alamat', true ),
+		'latitude'        => $latitude,
+		'longitude'       => $longitude,
+		'has_coordinates' => '' !== $latitude && '' !== $longitude,
+		'maps_url'        => get_post_meta( $post->ID, 'maps_url', true ),
+		'jam_operasional' => get_post_meta( $post->ID, 'jam_operasional', true ),
+		'nomor_telepon'   => get_post_meta( $post->ID, 'nomor_telepon', true ),
+		'status'          => get_post_meta( $post->ID, 'status', true ) ?: 'aktif',
+	);
+}
 
 /**
  * Returns active service locations ordered for public display.
@@ -814,9 +917,8 @@ function satlantas_get_active_locations( $posts_per_page = -1 ) {
 			'posts_per_page' => $posts_per_page,
 			'orderby'        => array(
 				'menu_order' => 'ASC',
-				'title'      => 'ASC',
+				'date'       => 'DESC',
 			),
-			'order'          => 'ASC',
 			'meta_query'     => array(
 				array(
 					'key'     => 'status',
@@ -826,6 +928,40 @@ function satlantas_get_active_locations( $posts_per_page = -1 ) {
 			),
 		)
 	);
+}
+
+/**
+ * Returns active service locations as normalized data for map templates.
+ *
+ * This keeps the WP_Query helper intact for archives/cards while giving Leaflet
+ * views a ready-to-encode array with latitude and longitude included.
+ *
+ * @param int  $posts_per_page      Number of locations to fetch.
+ * @param bool $coordinates_only    Whether to return only locations with both coordinates.
+ * @return array
+ */
+function satlantas_get_active_location_layanan_data( $posts_per_page = -1, $coordinates_only = false ) {
+	$locations_query = satlantas_get_active_locations( $posts_per_page );
+	$locations       = array();
+
+	foreach ( $locations_query->posts as $location ) {
+		$meta = satlantas_get_location_layanan_meta( $location );
+
+		if ( $coordinates_only && empty( $meta['has_coordinates'] ) ) {
+			continue;
+		}
+
+		$locations[] = array(
+			'id'        => $location->ID,
+			'title'     => get_the_title( $location ),
+			'permalink' => get_permalink( $location ),
+			'meta'      => $meta,
+		);
+	}
+
+	wp_reset_postdata();
+
+	return $locations;
 }
 
 /**
@@ -843,10 +979,9 @@ function satlantas_order_lokasi_layanan_archive( $query ) {
 		'orderby',
 		array(
 			'menu_order' => 'ASC',
-			'title'      => 'ASC',
+			'date'       => 'DESC',
 		)
 	);
-	$query->set( 'order', 'ASC' );
 	$query->set(
 		'meta_query',
 		array(

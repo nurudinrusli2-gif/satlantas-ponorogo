@@ -22,6 +22,10 @@ $fallback_news = array(
 	array( 'title' => 'Pelayanan SIM Keliling di Beberapa Titik', 'image' => 'news-sim.jpg' ),
 	array( 'title' => 'Satlantas Polres Ponorogo Gelar Patroli Rutin', 'image' => 'news-traffic.jpg' ),
 );
+
+$posts_page_id = (int) get_option( 'page_for_posts' );
+$news_url      = $posts_page_id ? get_permalink( $posts_page_id ) : '';
+$news_url      = $news_url ?: home_url( '/berita/' );
 ?>
 
 <main id="primary" class="site-main front-page">
@@ -68,7 +72,7 @@ $fallback_news = array(
 				<h2 id="news-title">Satlantas Polres Ponorogo</h2>
 				<p>Hadir dengan informasi, edukasi, dan pelayanan untuk Masyarakat</p>
 			</div>
-			<a class="button-primary" href="<?php echo esc_url( get_permalink( get_option( 'page_for_posts' ) ) ?: home_url( '/berita/' ) ); ?>">Lihat Semua</a>
+			<a class="button-primary" href="<?php echo esc_url( $news_url ); ?>">Lihat Semua</a>
 		</div>
 		<div class="news-grid">
 			<?php if ( $news_query->have_posts() ) : ?>
@@ -95,9 +99,9 @@ $fallback_news = array(
 						<img class="news-thumb" src="<?php echo satlantas_asset( 'assets/images/' . $item['image'] ); ?>" alt="">
 						<div class="news-body">
 							<time datetime="2026-05-22">22 Mei 2026</time>
-							<h3><a href="#"><?php echo esc_html( $item['title'] ); ?></a></h3>
+							<h3><a href="<?php echo esc_url( $news_url ); ?>"><?php echo esc_html( $item['title'] ); ?></a></h3>
 							<p>Kegiatan patroli rutin untuk menjaga keamanan dan ketertiban lalu lintas.</p>
-							<a class="read-more" href="#">Selengkapnya</a>
+							<a class="read-more" href="<?php echo esc_url( $news_url ); ?>">Selengkapnya</a>
 						</div>
 					</article>
 				<?php endforeach; ?>
@@ -220,49 +224,94 @@ $fallback_news = array(
 	</section>
 
 	<section class="section locations-section" aria-labelledby="locations-title">
-		<p class="section-eyebrow">Peta</p>
 		<h2 id="locations-title">Lokasi Layanan</h2>
-		<div class="locations-layout">
-			<img class="map-image" src="<?php echo satlantas_asset( 'assets/images/service-map.jpg' ); ?>" alt="<?php esc_attr_e( 'Peta lokasi layanan', 'satlantas-ponorogo' ); ?>">
-			<div class="location-list">
-				<div class="list-head">
-					<h3>Daftar Lokasi Pelayanan</h3>
-					<a class="button-primary" href="<?php echo esc_url( get_post_type_archive_link( 'lokasi_layanan' ) ); ?>">Lihat Semua</a>
-				</div>
-				<?php
-				$locations_query = satlantas_get_active_locations( 5 );
-				?>
-				<?php if ( $locations_query->have_posts() ) : ?>
-					<?php while ( $locations_query->have_posts() ) : $locations_query->the_post(); ?>
-						<?php
-						$alamat          = get_post_meta( get_the_ID(), 'alamat', true );
-						$maps_url        = get_post_meta( get_the_ID(), 'maps_url', true );
-						$jam_operasional = get_post_meta( get_the_ID(), 'jam_operasional', true );
-						?>
-						<div class="location-item">
-							<div>
-								<strong><?php the_title(); ?></strong>
-								<?php if ( $alamat ) : ?>
-									<p><?php echo esc_html( $alamat ); ?></p>
-								<?php endif; ?>
-								<?php if ( $jam_operasional ) : ?>
-									<small><?php echo esc_html( $jam_operasional ); ?></small>
-								<?php endif; ?>
+		<p class="locations-intro">Temukan lokasi layanan Satlantas Polres Ponorogo yang tersedia untuk masyarakat.</p>
+		<?php
+		$locations_query  = satlantas_get_active_locations();
+		$locations        = $locations_query->posts;
+		$map_locations    = satlantas_get_active_location_layanan_data( -1, true );
+		$primary_location = $locations ? $locations[0] : null;
+		$other_locations  = $locations ? array_slice( $locations, 1 ) : array();
+		?>
+		<?php if ( $primary_location ) : ?>
+			<?php
+			$primary_address = get_post_meta( $primary_location->ID, 'alamat', true );
+			$primary_maps    = get_post_meta( $primary_location->ID, 'maps_url', true );
+			$primary_hours   = get_post_meta( $primary_location->ID, 'jam_operasional', true );
+			$primary_phone   = get_post_meta( $primary_location->ID, 'nomor_telepon', true );
+			?>
+			<div class="locations-layout<?php echo empty( $other_locations ) ? ' locations-layout--single' : ''; ?>">
+				<article class="location-hero-card">
+					<div class="location-hero-media">
+						<?php // Render Leaflet only when active locations have complete coordinates. ?>
+						<?php if ( $map_locations ) : ?>
+							<div id="satlantas-service-map" class="location-service-map" role="img" aria-label="<?php esc_attr_e( 'Peta lokasi layanan Satlantas Polres Ponorogo', 'satlantas-ponorogo' ); ?>"></div>
+						<?php else : ?>
+							<div class="location-map-empty">
+								<strong><?php esc_html_e( 'Koordinat lokasi belum tersedia.', 'satlantas-ponorogo' ); ?></strong>
+								<span><?php esc_html_e( 'Tambahkan latitude dan longitude pada data Lokasi Layanan untuk menampilkan peta interaktif.', 'satlantas-ponorogo' ); ?></span>
 							</div>
-							<?php if ( $maps_url ) : ?>
-								<a href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener">Lihat Peta</a>
-							<?php else : ?>
-								<a href="<?php the_permalink(); ?>">Detail</a>
+						<?php endif; ?>
+					</div>
+
+					<div class="location-hero-content">
+						<span class="location-hero-label"><?php esc_html_e( 'Lokasi Utama', 'satlantas-ponorogo' ); ?></span>
+						<h3><?php echo esc_html( get_the_title( $primary_location ) ); ?></h3>
+						<?php if ( $primary_address ) : ?>
+							<p><?php echo esc_html( $primary_address ); ?></p>
+						<?php endif; ?>
+						<div class="location-hero-meta">
+							<?php if ( $primary_hours ) : ?>
+								<span>
+									<strong><?php esc_html_e( 'Jam Operasional', 'satlantas-ponorogo' ); ?></strong>
+									<?php echo esc_html( $primary_hours ); ?>
+								</span>
+							<?php endif; ?>
+							<?php if ( $primary_phone ) : ?>
+								<span>
+									<strong><?php esc_html_e( 'Telepon', 'satlantas-ponorogo' ); ?></strong>
+									<?php echo esc_html( $primary_phone ); ?>
+								</span>
 							<?php endif; ?>
 						</div>
-					<?php endwhile; wp_reset_postdata(); ?>
-				<?php else : ?>
-					<div class="location-empty">
-						<p><?php esc_html_e( 'Belum ada lokasi layanan aktif saat ini.', 'satlantas-ponorogo' ); ?></p>
+						<?php if ( $primary_maps ) : ?>
+							<a class="button-primary location-hero-button" href="<?php echo esc_url( $primary_maps ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></a>
+						<?php endif; ?>
+					</div>
+				</article>
+
+				<?php if ( $other_locations ) : ?>
+					<div class="location-list" aria-label="<?php esc_attr_e( 'Lokasi layanan lainnya', 'satlantas-ponorogo' ); ?>">
+						<?php foreach ( $other_locations as $location ) : ?>
+							<?php
+							$alamat          = get_post_meta( $location->ID, 'alamat', true );
+							$maps_url        = get_post_meta( $location->ID, 'maps_url', true );
+							$jam_operasional = get_post_meta( $location->ID, 'jam_operasional', true );
+							?>
+							<article class="location-item">
+								<div class="location-item__content">
+									<strong><?php echo esc_html( get_the_title( $location ) ); ?></strong>
+									<?php if ( $alamat ) : ?>
+										<p><?php echo esc_html( wp_trim_words( $alamat, 14, '...' ) ); ?></p>
+									<?php endif; ?>
+									<?php if ( $jam_operasional ) : ?>
+										<small><?php echo esc_html( $jam_operasional ); ?></small>
+									<?php endif; ?>
+								</div>
+								<?php if ( $maps_url ) : ?>
+									<a href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></a>
+								<?php endif; ?>
+							</article>
+						<?php endforeach; ?>
 					</div>
 				<?php endif; ?>
 			</div>
-		</div>
+			<?php wp_reset_postdata(); ?>
+		<?php else : ?>
+			<div class="location-empty location-empty--section">
+				<p><?php esc_html_e( 'Data lokasi layanan belum tersedia.', 'satlantas-ponorogo' ); ?></p>
+			</div>
+		<?php endif; ?>
 	</section>
 
 	<section class="section vehicle-section" aria-labelledby="vehicle-title">
@@ -270,7 +319,7 @@ $fallback_news = array(
 		<div class="vehicle-search">
 			<label class="screen-reader-text" for="vehicle-search-input">Cari kendaraan</label>
 			<input id="vehicle-search-input" type="search" placeholder="Cari">
-			<a class="button-primary" href="#">Lihat Semua</a>
+			<a class="button-primary" href="<?php echo esc_url( satlantas_page_url_by_slug( 'info-layanan' ) ); ?>">Lihat Semua</a>
 		</div>
 		<h2 id="vehicle-title" class="screen-reader-text">Database Kendaraan</h2>
 		<div class="vehicle-grid">
@@ -297,7 +346,7 @@ $fallback_news = array(
 		</div>
 	</section>
 
-	<section class="info-center" aria-labelledby="info-title">
+	<section class="info-center info-center--single" aria-labelledby="info-title">
 		<div class="info-panel">
 			<p class="section-eyebrow">Jadwal Layanan</p>
 			<h2 id="info-title">Hari ini</h2>
@@ -307,23 +356,6 @@ $fallback_news = array(
 			<h2>Terkini</h2>
 			<div class="traffic-tags"><span class="tag-red">Macet</span><span class="tag-yellow">Padat Merayap</span><span class="tag-blue">Informasi</span></div>
 			<p>Arus kendaraan tetap terpantau. Pengguna jalan diimbau mematuhi rambu dan arahan petugas.</p>
-		</div>
-		<div class="cctv-panel">
-			<div class="section-head compact">
-				<div>
-					<p class="section-eyebrow">CCTV</p>
-					<h2>Lalu lintas</h2>
-				</div>
-				<a class="button-primary" href="#">Lihat Semua</a>
-			</div>
-			<div class="cctv-grid">
-				<?php for ( $i = 1; $i <= 6; $i++ ) : ?>
-					<figure>
-						<img src="<?php echo satlantas_asset( 'assets/images/cctv.jpg' ); ?>" alt="<?php echo esc_attr( 'CCTV lalu lintas ' . $i ); ?>">
-						<figcaption>Jl. Sudirman</figcaption>
-					</figure>
-				<?php endfor; ?>
-			</div>
 		</div>
 	</section>
 
@@ -335,7 +367,7 @@ $fallback_news = array(
 				<div class="help-card"><?php satlantas_icon( 'call' ); ?><strong>110</strong><span>Call Center</span><small>Layanan Polisi 24 Jam Bebas Pulsa</small></div>
 				<div class="help-card"><?php satlantas_icon( 'bot' ); ?><strong>Sakti</strong><span>Chat Bot</span><small>Layanan terkait lalu lintas</small></div>
 			</div>
-			<a class="wide-cta" href="#">Layanan Pengaduan & Info Kecelakaan Lalu Lintas</a>
+			<a class="wide-cta" href="<?php echo esc_url( satlantas_page_url_by_slug( 'pengaduan' ) ); ?>">Layanan Pengaduan & Info Kecelakaan Lalu Lintas</a>
 		</div>
 		<div class="faq-list">
 			<?php
