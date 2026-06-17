@@ -57,39 +57,28 @@ add_action( 'after_setup_theme', 'satlantas_setup' );
  * Enqueue theme styles and scripts.
  */
 function satlantas_scripts() {
-	$style_dependencies = array();
-
 	if ( is_front_page() && function_exists( 'satlantas_get_active_location_layanan_data' ) ) {
-		$map_locations = satlantas_get_active_location_layanan_data( -1, true );
-
-		if ( ! empty( $map_locations ) ) {
-			wp_enqueue_style( 'satlantas-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4' );
-			wp_enqueue_script( 'satlantas-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true );
-
-			$style_dependencies[] = 'satlantas-leaflet';
-
+		$location_data = satlantas_get_active_location_layanan_data( -1, false );
+		if ( ! empty( $location_data ) ) {
 			wp_enqueue_script(
 				'satlantas-locations-map',
 				get_template_directory_uri() . '/assets/js/locations-map.js',
-				array( 'satlantas-leaflet' ),
+				array(),
 				SATLANTAS_VERSION,
 				true
 			);
 
-			// Keep marker data server-rendered so the map needs no external API beyond OSM tiles.
 			wp_localize_script(
 				'satlantas-locations-map',
 				'satlantasLocationsMap',
 				array(
-					'tileUrl'     => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-					'attribution' => '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-					'locations'   => $map_locations,
+					'locations' => $location_data,
 				)
 			);
 		}
 	}
 
-	wp_enqueue_style( 'satlantas-style', get_stylesheet_uri(), $style_dependencies, SATLANTAS_VERSION );
+	wp_enqueue_style( 'satlantas-style', get_stylesheet_uri(), array(), SATLANTAS_VERSION );
 	wp_enqueue_script( 'satlantas-navigation', get_template_directory_uri() . '/assets/js/navigation.js', array(), SATLANTAS_VERSION, true );
 }
 add_action( 'wp_enqueue_scripts', 'satlantas_scripts' );
@@ -116,9 +105,10 @@ function satlantas_icon( $name ) {
 		'plate'    => '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6 37 12v10c0 8-5.4 14.6-13 18-7.6-3.4-13-10-13-18V12z"/><circle cx="23" cy="22" r="5"/><path d="m27 26 6 6"/></svg>',
 		'phone'    => '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M9 12h30v20H21l-8 6v-6H9z"/><path d="M24 18v7M24 29h.1"/></svg>',
 		'info'     => '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="16"/><path d="M24 22v11M24 15h.1"/></svg>',
-		'map'      => '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 42s13-12 13-24a13 13 0 0 0-26 0c0 12 13 24 13 24z"/><circle cx="24" cy="18" r="5"/></svg>',
+		'map'      => '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 31h32"/><path d="M13 31v-8l6-4 7 2 8-5 4 2v13"/><circle cx="18" cy="16" r="4"/><path d="M18 20v8"/></svg>',
 		'clock'    => '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="17"/><path d="M24 13v12l8 5"/></svg>',
-		'call'     => '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 10 9 17c2 12 10 20 22 22l7-7-9-7-4 4c-5-2-8-5-10-10l4-4z"/></svg>',
+		'call'     => '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M17 31c5-1 10-5 13-10"/><path d="M19 37c8 0 15-6 15-14 0-2-1-5-2-7l-6 4 2 5-5 4-5-2-4 6c2 2 3 4 5 4z"/><path d="M27 14c3 0 6 2 7 5"/></svg>',
+		'support'  => '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="18" r="6"/><path d="M14 36c1.5-5 18.5-5 20 0"/><path d="M12 20c0-7 24-7 24 0v6"/><path d="M36 27h3v7h-3"/><path d="M9 27h3v7H9"/></svg>',
 		'bot'      => '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M12 18h24v16H12z"/><path d="M20 18v-6h8v6M18 25h.1M30 25h.1M20 32h8"/></svg>',
 	);
 
@@ -196,8 +186,8 @@ function satlantas_fallback_menu() {
  * Normalizes primary navigation items so assigned menus follow the canonical mapping.
  *
  * @param array    $items Nav menu items.
- * @param stdClass  $menu  Menu object.
- * @param array     $args  Menu args.
+ * @param stdClass $menu  Menu object.
+ * @param array    $args  Menu args.
  * @return array
  */
 function satlantas_normalize_primary_menu_items( $items, $menu, $args ) {
@@ -254,6 +244,12 @@ add_action( 'init', 'satlantas_register_sim_keliling_post_type' );
  */
 function satlantas_flush_rewrite_rules() {
 	satlantas_register_sim_keliling_post_type();
+	satlantas_register_pengumuman_post_type();
+	satlantas_register_informasi_lalu_lintas_post_type();
+	satlantas_register_kendaraan_temuan_post_type();
+	satlantas_register_lokasi_layanan_post_type();
+	satlantas_register_struktur_organisasi_post_type();
+	satlantas_register_regulasi_post_type();
 	flush_rewrite_rules();
 }
 add_action( 'after_switch_theme', 'satlantas_flush_rewrite_rules' );
@@ -674,6 +670,76 @@ function satlantas_format_pengumuman_date( $date ) {
 }
 
 /**
+ * Returns a traffic status badge from announcement content.
+ *
+ * @param int|WP_Post|null $post Optional post object or ID. Defaults to current post.
+ * @return array
+ */
+function satlantas_get_traffic_status_badge( $post = null ) {
+	$post = get_post( $post );
+
+	if ( ! $post || 'pengumuman' !== $post->post_type ) {
+		return array(
+			'label' => esc_html__( 'Informasi', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--neutral',
+		);
+	}
+
+	$source = strtolower(
+		wp_strip_all_tags(
+			$post->post_title . ' ' . $post->post_content . ' ' . get_post_meta( $post->ID, 'prioritas', true )
+		)
+	);
+
+	if ( false !== strpos( $source, 'padat merayap' ) ) {
+		return array(
+			'label' => esc_html__( 'Padat Merayap', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--warning',
+		);
+	}
+
+	if ( false !== strpos( $source, 'macet' ) ) {
+		return array(
+			'label' => esc_html__( 'Macet', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--danger',
+		);
+	}
+
+	if ( false !== strpos( $source, 'lancar' ) ) {
+		return array(
+			'label' => esc_html__( 'Lancar', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--success',
+		);
+	}
+
+	if ( false !== strpos( $source, 'pengalihan' ) ) {
+		return array(
+			'label' => esc_html__( 'Pengalihan Arus', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--info',
+		);
+	}
+
+	if ( false !== strpos( $source, 'perbaikan' ) || false !== strpos( $source, 'pekerjaan' ) ) {
+		return array(
+			'label' => esc_html__( 'Pekerjaan Jalan', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--warning',
+		);
+	}
+
+	if ( 'tinggi' === get_post_meta( $post->ID, 'prioritas', true ) ) {
+		return array(
+			'label' => esc_html__( 'Informasi Penting', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--info',
+		);
+	}
+
+	return array(
+		'label' => esc_html__( 'Informasi', 'satlantas-ponorogo' ),
+		'class' => 'traffic-status--neutral',
+	);
+}
+
+/**
  * Makes the Pengumuman archive show active announcements first.
  *
  * @param WP_Query $query Current query object.
@@ -695,6 +761,559 @@ function satlantas_order_pengumuman_archive( $query ) {
 	$query->set( 'meta_query', satlantas_get_active_pengumuman_meta_query() );
 }
 add_action( 'pre_get_posts', 'satlantas_order_pengumuman_archive' );
+
+/**
+ * Registers traffic information managed from the WordPress dashboard.
+ */
+function satlantas_register_informasi_lalu_lintas_post_type() {
+	register_post_type(
+		'informasi_lalu_lintas',
+		array(
+			'labels'       => array(
+				'name'               => esc_html__( 'Informasi Lalu Lintas', 'satlantas-ponorogo' ),
+				'singular_name'      => esc_html__( 'Informasi Lalu Lintas', 'satlantas-ponorogo' ),
+				'menu_name'          => esc_html__( 'Informasi Lalu Lintas', 'satlantas-ponorogo' ),
+				'add_new_item'       => esc_html__( 'Tambah Informasi Lalu Lintas', 'satlantas-ponorogo' ),
+				'edit_item'          => esc_html__( 'Edit Informasi Lalu Lintas', 'satlantas-ponorogo' ),
+				'new_item'           => esc_html__( 'Informasi Lalu Lintas Baru', 'satlantas-ponorogo' ),
+				'view_item'          => esc_html__( 'Lihat Informasi Lalu Lintas', 'satlantas-ponorogo' ),
+				'search_items'       => esc_html__( 'Cari Informasi Lalu Lintas', 'satlantas-ponorogo' ),
+				'not_found'          => esc_html__( 'Belum ada informasi lalu lintas.', 'satlantas-ponorogo' ),
+				'not_found_in_trash' => esc_html__( 'Tidak ada informasi lalu lintas di sampah.', 'satlantas-ponorogo' ),
+			),
+			'public'       => true,
+			'show_ui'      => true,
+			'show_in_menu' => true,
+			'publicly_queryable' => true,
+			'has_archive'  => true,
+			'menu_icon'    => 'dashicons-warning',
+			'rewrite'      => array( 'slug' => 'informasi-lalu-lintas' ),
+			'supports'     => array( 'title', 'editor' ),
+			'show_in_rest' => true,
+		)
+	);
+}
+add_action( 'init', 'satlantas_register_informasi_lalu_lintas_post_type' );
+
+/**
+ * Flushes rewrite rules once after traffic information is added.
+ */
+function satlantas_maybe_flush_informasi_lalu_lintas_rewrites() {
+	$rewrite_version = 'informasi-lalu-lintas-1';
+
+	if ( get_option( 'satlantas_informasi_lalu_lintas_rewrite_version' ) === $rewrite_version ) {
+		return;
+	}
+
+	flush_rewrite_rules();
+	update_option( 'satlantas_informasi_lalu_lintas_rewrite_version', $rewrite_version );
+}
+add_action( 'init', 'satlantas_maybe_flush_informasi_lalu_lintas_rewrites', 20 );
+
+/**
+ * Adds traffic information fields to the admin editor.
+ */
+function satlantas_add_informasi_lalu_lintas_meta_box() {
+	add_meta_box(
+		'satlantas_informasi_lalu_lintas_details',
+		esc_html__( 'Detail Informasi Lalu Lintas', 'satlantas-ponorogo' ),
+		'satlantas_render_informasi_lalu_lintas_meta_box',
+		'informasi_lalu_lintas',
+		'normal',
+		'high'
+	);
+}
+add_action( 'add_meta_boxes', 'satlantas_add_informasi_lalu_lintas_meta_box' );
+
+/**
+ * Renders traffic information metadata fields.
+ *
+ * @param WP_Post $post Current Informasi Lalu Lintas post.
+ */
+function satlantas_render_informasi_lalu_lintas_meta_box( $post ) {
+	wp_nonce_field( 'satlantas_save_informasi_lalu_lintas_meta', 'satlantas_informasi_lalu_lintas_nonce' );
+
+	$kategori      = get_post_meta( $post->ID, 'kategori', true ) ?: 'informasi';
+	$deskripsi     = get_post_meta( $post->ID, 'deskripsi', true );
+	$urutan_tampil = get_post_meta( $post->ID, 'urutan_tampil', true );
+	$status        = get_post_meta( $post->ID, 'status', true ) ?: 'aktif';
+	?>
+	<p>
+		<label for="satlantas-informasi-kategori"><strong><?php esc_html_e( 'Kategori', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<select id="satlantas-informasi-kategori" name="satlantas_informasi_lalu_lintas[kategori]" class="widefat">
+			<option value="macet" <?php selected( $kategori, 'macet' ); ?>><?php esc_html_e( 'Macet', 'satlantas-ponorogo' ); ?></option>
+			<option value="padat_merayap" <?php selected( $kategori, 'padat_merayap' ); ?>><?php esc_html_e( 'Padat Merayap', 'satlantas-ponorogo' ); ?></option>
+			<option value="hati_hati" <?php selected( $kategori, 'hati_hati' ); ?>><?php esc_html_e( 'Hati-hati', 'satlantas-ponorogo' ); ?></option>
+			<option value="informasi" <?php selected( $kategori, 'informasi' ); ?>><?php esc_html_e( 'Informasi', 'satlantas-ponorogo' ); ?></option>
+		</select>
+	</p>
+	<p>
+		<label for="satlantas-informasi-deskripsi"><strong><?php esc_html_e( 'Deskripsi', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<textarea id="satlantas-informasi-deskripsi" name="satlantas_informasi_lalu_lintas[deskripsi]" class="widefat" rows="6"><?php echo esc_textarea( $deskripsi ); ?></textarea>
+	</p>
+	<p>
+		<label for="satlantas-informasi-urutan"><strong><?php esc_html_e( 'Urutan Tampil', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-informasi-urutan" type="number" min="0" step="1" name="satlantas_informasi_lalu_lintas[urutan_tampil]" value="<?php echo esc_attr( $urutan_tampil ); ?>" class="small-text" placeholder="1">
+	</p>
+	<p>
+		<label for="satlantas-informasi-status"><strong><?php esc_html_e( 'Status', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<select id="satlantas-informasi-status" name="satlantas_informasi_lalu_lintas[status]" class="widefat">
+			<option value="aktif" <?php selected( $status, 'aktif' ); ?>><?php esc_html_e( 'Aktif', 'satlantas-ponorogo' ); ?></option>
+			<option value="nonaktif" <?php selected( $status, 'nonaktif' ); ?>><?php esc_html_e( 'Nonaktif', 'satlantas-ponorogo' ); ?></option>
+		</select>
+	</p>
+	<?php
+}
+
+/**
+ * Saves traffic information metadata.
+ *
+ * @param int $post_id Current post ID.
+ */
+function satlantas_save_informasi_lalu_lintas_meta( $post_id ) {
+	if (
+		! isset( $_POST['satlantas_informasi_lalu_lintas_nonce'] ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['satlantas_informasi_lalu_lintas_nonce'] ) ), 'satlantas_save_informasi_lalu_lintas_meta' )
+	) {
+		return;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	$fields = isset( $_POST['satlantas_informasi_lalu_lintas'] ) ? (array) wp_unslash( $_POST['satlantas_informasi_lalu_lintas'] ) : array();
+
+	$sanitized = array(
+		'kategori'      => isset( $fields['kategori'] ) ? sanitize_key( $fields['kategori'] ) : 'informasi',
+		'deskripsi'     => isset( $fields['deskripsi'] ) ? wp_kses_post( $fields['deskripsi'] ) : '',
+		'urutan_tampil' => isset( $fields['urutan_tampil'] ) ? absint( $fields['urutan_tampil'] ) : 0,
+		'status'        => ( isset( $fields['status'] ) && 'nonaktif' === $fields['status'] ) ? 'nonaktif' : 'aktif',
+	);
+
+	$allowed_categories = array( 'macet', 'padat_merayap', 'hati_hati', 'informasi' );
+
+	if ( ! in_array( $sanitized['kategori'], $allowed_categories, true ) ) {
+		$sanitized['kategori'] = 'informasi';
+	}
+
+	foreach ( $sanitized as $key => $value ) {
+		update_post_meta( $post_id, $key, $value );
+	}
+}
+add_action( 'save_post_informasi_lalu_lintas', 'satlantas_save_informasi_lalu_lintas_meta' );
+
+/**
+ * Returns the formatted traffic information category badge.
+ *
+ * @param string $kategori Category key.
+ * @return array
+ */
+function satlantas_get_informasi_lalu_lintas_category_badge( $kategori ) {
+	$badges = array(
+		'macet'          => array(
+			'label' => esc_html__( 'Macet', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--danger',
+		),
+		'padat_merayap'  => array(
+			'label' => esc_html__( 'Padat Merayap', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--warning',
+		),
+		'hati_hati'      => array(
+			'label' => esc_html__( 'Hati-hati', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--info',
+		),
+		'informasi'      => array(
+			'label' => esc_html__( 'Informasi', 'satlantas-ponorogo' ),
+			'class' => 'traffic-status--neutral',
+		),
+	);
+
+	return $badges[ $kategori ] ?? $badges['informasi'];
+}
+
+/**
+ * Returns the display description for a traffic information item.
+ *
+ * @param int|WP_Post|null $post Optional post object or ID. Defaults to current post.
+ * @return string
+ */
+function satlantas_get_informasi_lalu_lintas_description( $post = null ) {
+	$post = get_post( $post );
+
+	if ( ! $post || 'informasi_lalu_lintas' !== $post->post_type ) {
+		return '';
+	}
+
+	$deskripsi = get_post_meta( $post->ID, 'deskripsi', true );
+
+	if ( $deskripsi ) {
+		return wp_kses_post( $deskripsi );
+	}
+
+	return wp_kses_post( get_the_content( null, false, $post ) );
+}
+
+/**
+ * Returns active traffic information ordered by newest publish date.
+ *
+ * @param int $posts_per_page Number of items to fetch.
+ * @return WP_Query
+ */
+function satlantas_get_active_informasi_lalu_lintas( $posts_per_page = 4 ) {
+	return new WP_Query(
+		array(
+			'post_type'      => 'informasi_lalu_lintas',
+			'posts_per_page' => $posts_per_page,
+			'orderby'        => array(
+				'date' => 'DESC',
+			),
+			'meta_query'     => array(
+				array(
+					'key'     => 'status',
+					'value'   => 'aktif',
+					'compare' => '=',
+				),
+			),
+		)
+	);
+}
+
+/**
+ * Makes the traffic information archive show active items first.
+ *
+ * @param WP_Query $query Current query object.
+ */
+function satlantas_order_informasi_lalu_lintas_archive( $query ) {
+	if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'informasi_lalu_lintas' ) ) {
+		return;
+	}
+
+	$query->set( 'posts_per_page', 10 );
+	$query->set(
+		'orderby',
+		array(
+			'date' => 'DESC',
+		)
+	);
+	$query->set(
+		'meta_query',
+		array(
+			array(
+				'key'     => 'status',
+				'value'   => 'aktif',
+				'compare' => '=',
+			),
+		)
+	);
+}
+add_action( 'pre_get_posts', 'satlantas_order_informasi_lalu_lintas_archive' );
+
+/**
+ * Registers found vehicles managed from the WordPress dashboard.
+ */
+function satlantas_register_kendaraan_temuan_post_type() {
+	register_post_type(
+		'kendaraan_temuan',
+		array(
+			'labels'       => array(
+				'name'               => esc_html__( 'Kendaraan Temuan', 'satlantas-ponorogo' ),
+				'singular_name'      => esc_html__( 'Kendaraan Temuan', 'satlantas-ponorogo' ),
+				'menu_name'          => esc_html__( 'Kendaraan Temuan', 'satlantas-ponorogo' ),
+				'add_new_item'       => esc_html__( 'Tambah Kendaraan Temuan', 'satlantas-ponorogo' ),
+				'edit_item'          => esc_html__( 'Edit Kendaraan Temuan', 'satlantas-ponorogo' ),
+				'new_item'           => esc_html__( 'Kendaraan Temuan Baru', 'satlantas-ponorogo' ),
+				'view_item'          => esc_html__( 'Lihat Kendaraan Temuan', 'satlantas-ponorogo' ),
+				'search_items'       => esc_html__( 'Cari Kendaraan Temuan', 'satlantas-ponorogo' ),
+				'not_found'          => esc_html__( 'Belum ada kendaraan temuan.', 'satlantas-ponorogo' ),
+				'not_found_in_trash' => esc_html__( 'Tidak ada kendaraan temuan di sampah.', 'satlantas-ponorogo' ),
+			),
+			'public'       => true,
+			'has_archive'  => true,
+			'menu_icon'    => 'dashicons-car',
+			'rewrite'      => array( 'slug' => 'kendaraan-temuan' ),
+			'supports'     => array( 'title', 'thumbnail' ),
+			'show_in_rest' => true,
+		)
+	);
+}
+add_action( 'init', 'satlantas_register_kendaraan_temuan_post_type' );
+
+/**
+ * Flushes rewrite rules once after vehicle findings are added.
+ */
+function satlantas_maybe_flush_kendaraan_temuan_rewrites() {
+	$rewrite_version = 'kendaraan-temuan-1';
+
+	if ( get_option( 'satlantas_kendaraan_temuan_rewrite_version' ) === $rewrite_version ) {
+		return;
+	}
+
+	flush_rewrite_rules();
+	update_option( 'satlantas_kendaraan_temuan_rewrite_version', $rewrite_version );
+}
+add_action( 'init', 'satlantas_maybe_flush_kendaraan_temuan_rewrites', 20 );
+
+/**
+ * Adds vehicle finding fields to the admin editor.
+ */
+function satlantas_add_kendaraan_temuan_meta_box() {
+	add_meta_box(
+		'satlantas_kendaraan_temuan_details',
+		esc_html__( 'Detail Kendaraan Temuan', 'satlantas-ponorogo' ),
+		'satlantas_render_kendaraan_temuan_meta_box',
+		'kendaraan_temuan',
+		'normal',
+		'high'
+	);
+}
+add_action( 'add_meta_boxes', 'satlantas_add_kendaraan_temuan_meta_box' );
+
+/**
+ * Renders vehicle finding metadata fields.
+ *
+ * @param WP_Post $post Current Kendaraan Temuan post.
+ */
+function satlantas_render_kendaraan_temuan_meta_box( $post ) {
+	wp_nonce_field( 'satlantas_save_kendaraan_temuan_meta', 'satlantas_kendaraan_temuan_nonce' );
+
+	$nomor_polisi   = get_post_meta( $post->ID, 'nomor_polisi', true );
+	$merk_kendaraan = get_post_meta( $post->ID, 'merk_kendaraan', true );
+	$jenis_kendaraan = get_post_meta( $post->ID, 'jenis_kendaraan', true );
+	$warna          = get_post_meta( $post->ID, 'warna', true );
+	$lokasi_temuan  = get_post_meta( $post->ID, 'lokasi_temuan', true );
+	$tanggal_temuan = get_post_meta( $post->ID, 'tanggal_temuan', true );
+	$status         = get_post_meta( $post->ID, 'status', true ) ?: 'diamankan';
+	$kontak_petugas = get_post_meta( $post->ID, 'kontak_petugas', true );
+	$nomor_telepon  = get_post_meta( $post->ID, 'nomor_telepon', true );
+	?>
+	<p>
+		<label for="satlantas-kendaraan-nomor-polisi"><strong><?php esc_html_e( 'Nomor Polisi', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-kendaraan-nomor-polisi" type="text" name="satlantas_kendaraan_temuan[nomor_polisi]" value="<?php echo esc_attr( $nomor_polisi ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: W 1234 AB', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-kendaraan-merk"><strong><?php esc_html_e( 'Merk Kendaraan', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-kendaraan-merk" type="text" name="satlantas_kendaraan_temuan[merk_kendaraan]" value="<?php echo esc_attr( $merk_kendaraan ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: Honda', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-kendaraan-jenis"><strong><?php esc_html_e( 'Jenis Kendaraan', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-kendaraan-jenis" type="text" name="satlantas_kendaraan_temuan[jenis_kendaraan]" value="<?php echo esc_attr( $jenis_kendaraan ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: Sepeda Motor', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-kendaraan-warna"><strong><?php esc_html_e( 'Warna', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-kendaraan-warna" type="text" name="satlantas_kendaraan_temuan[warna]" value="<?php echo esc_attr( $warna ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: Hitam', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-kendaraan-lokasi"><strong><?php esc_html_e( 'Lokasi Temuan', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<textarea id="satlantas-kendaraan-lokasi" name="satlantas_kendaraan_temuan[lokasi_temuan]" class="widefat" rows="3"><?php echo esc_textarea( $lokasi_temuan ); ?></textarea>
+	</p>
+	<p>
+		<label for="satlantas-kendaraan-tanggal"><strong><?php esc_html_e( 'Tanggal Temuan', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-kendaraan-tanggal" type="date" name="satlantas_kendaraan_temuan[tanggal_temuan]" value="<?php echo esc_attr( $tanggal_temuan ); ?>" class="widefat">
+	</p>
+	<p>
+		<label for="satlantas-kendaraan-status"><strong><?php esc_html_e( 'Status', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<select id="satlantas-kendaraan-status" name="satlantas_kendaraan_temuan[status]" class="widefat">
+			<option value="diamankan" <?php selected( $status, 'diamankan' ); ?>><?php esc_html_e( 'Diamankan', 'satlantas-ponorogo' ); ?></option>
+			<option value="dikembalikan" <?php selected( $status, 'dikembalikan' ); ?>><?php esc_html_e( 'Dikembalikan', 'satlantas-ponorogo' ); ?></option>
+		</select>
+	</p>
+	<p>
+		<label for="satlantas-kendaraan-kontak"><strong><?php esc_html_e( 'Kontak Petugas', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-kendaraan-kontak" type="text" name="satlantas_kendaraan_temuan[kontak_petugas]" value="<?php echo esc_attr( $kontak_petugas ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: AIPTU Nama Petugas', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<p>
+		<label for="satlantas-kendaraan-telepon"><strong><?php esc_html_e( 'Nomor Telepon', 'satlantas-ponorogo' ); ?></strong></label><br>
+		<input id="satlantas-kendaraan-telepon" type="text" name="satlantas_kendaraan_temuan[nomor_telepon]" value="<?php echo esc_attr( $nomor_telepon ); ?>" class="widefat" placeholder="<?php esc_attr_e( 'Contoh: 0812-3456-7890', 'satlantas-ponorogo' ); ?>">
+	</p>
+	<?php
+}
+
+/**
+ * Saves vehicle finding metadata.
+ *
+ * @param int $post_id Current post ID.
+ */
+function satlantas_save_kendaraan_temuan_meta( $post_id ) {
+	if (
+		! isset( $_POST['satlantas_kendaraan_temuan_nonce'] ) ||
+		! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['satlantas_kendaraan_temuan_nonce'] ) ), 'satlantas_save_kendaraan_temuan_meta' )
+	) {
+		return;
+	}
+
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+
+	$fields = isset( $_POST['satlantas_kendaraan_temuan'] ) ? (array) wp_unslash( $_POST['satlantas_kendaraan_temuan'] ) : array();
+
+	$sanitized = array(
+		'nomor_polisi'    => isset( $fields['nomor_polisi'] ) ? sanitize_text_field( $fields['nomor_polisi'] ) : '',
+		'merk_kendaraan'  => isset( $fields['merk_kendaraan'] ) ? sanitize_text_field( $fields['merk_kendaraan'] ) : '',
+		'jenis_kendaraan' => isset( $fields['jenis_kendaraan'] ) ? sanitize_text_field( $fields['jenis_kendaraan'] ) : '',
+		'warna'           => isset( $fields['warna'] ) ? sanitize_text_field( $fields['warna'] ) : '',
+		'lokasi_temuan'   => isset( $fields['lokasi_temuan'] ) ? sanitize_textarea_field( $fields['lokasi_temuan'] ) : '',
+		'tanggal_temuan'  => isset( $fields['tanggal_temuan'] ) ? sanitize_text_field( $fields['tanggal_temuan'] ) : '',
+		'status'          => ( isset( $fields['status'] ) && 'dikembalikan' === $fields['status'] ) ? 'dikembalikan' : 'diamankan',
+		'kontak_petugas'  => isset( $fields['kontak_petugas'] ) ? sanitize_text_field( $fields['kontak_petugas'] ) : '',
+		'nomor_telepon'   => isset( $fields['nomor_telepon'] ) ? sanitize_text_field( $fields['nomor_telepon'] ) : '',
+	);
+
+	foreach ( $sanitized as $key => $value ) {
+		update_post_meta( $post_id, $key, $value );
+	}
+}
+add_action( 'save_post_kendaraan_temuan', 'satlantas_save_kendaraan_temuan_meta' );
+
+/**
+ * Returns the formatted vehicle finding status badge.
+ *
+ * @param string $status Status key.
+ * @return array
+ */
+function satlantas_get_kendaraan_temuan_status_badge( $status ) {
+	$badges = array(
+		'diamankan'    => array(
+			'label' => esc_html__( 'Diamankan', 'satlantas-ponorogo' ),
+			'class' => 'cpt-badge--success',
+		),
+		'dikembalikan' => array(
+			'label' => esc_html__( 'Dikembalikan', 'satlantas-ponorogo' ),
+			'class' => 'cpt-badge--warning',
+		),
+	);
+
+	return $badges[ $status ] ?? $badges['diamankan'];
+}
+
+/**
+ * Returns active vehicle findings ordered by newest finding date.
+ *
+ * @param int $posts_per_page Number of items to fetch.
+ * @return WP_Query
+ */
+function satlantas_get_active_kendaraan_temuan( $posts_per_page = 4 ) {
+	return new WP_Query(
+		array(
+			'post_type'      => 'kendaraan_temuan',
+			'post_status'    => 'publish',
+			'posts_per_page' => $posts_per_page,
+			'meta_key'       => 'tanggal_temuan',
+			'orderby'        => array(
+				'meta_value' => 'DESC',
+				'date'       => 'DESC',
+			),
+			'meta_type'      => 'DATE',
+			'meta_query'     => array(
+				array(
+					'key'     => 'status',
+					'value'   => 'diamankan',
+					'compare' => '=',
+				),
+			),
+		)
+	);
+}
+
+/**
+ * Formats vehicle finding dates.
+ *
+ * @param string $date Date in Y-m-d format.
+ * @return string
+ */
+function satlantas_format_kendaraan_temuan_date( $date ) {
+	if ( empty( $date ) ) {
+		return '';
+	}
+
+	$timestamp = strtotime( $date );
+
+	return $timestamp ? date_i18n( 'd M Y', $timestamp ) : $date;
+}
+
+/**
+ * Makes the vehicle findings archive show active items first.
+ *
+ * @param WP_Query $query Current query object.
+ */
+function satlantas_order_kendaraan_temuan_archive( $query ) {
+	if ( is_admin() || ! $query->is_main_query() || ! $query->is_post_type_archive( 'kendaraan_temuan' ) ) {
+		return;
+	}
+
+	$query->set( 'posts_per_page', 12 );
+	$query->set( 'meta_key', 'tanggal_temuan' );
+	$query->set(
+		'orderby',
+		array(
+			'meta_value' => 'DESC',
+			'date'       => 'DESC',
+		)
+	);
+	$query->set( 'meta_type', 'DATE' );
+	$query->set(
+		'meta_query',
+		array(
+			array(
+				'key'     => 'status',
+				'value'   => 'diamankan',
+				'compare' => '=',
+			),
+		)
+	);
+}
+add_action( 'pre_get_posts', 'satlantas_order_kendaraan_temuan_archive' );
+
+/**
+ * Redirects non-public singles to the relevant archive.
+ */
+function satlantas_redirect_hidden_cpt_singles() {
+	if ( ! is_singular( array( 'informasi_lalu_lintas', 'kendaraan_temuan' ) ) ) {
+		return;
+	}
+
+	$post = get_queried_object();
+
+	if ( ! $post instanceof WP_Post ) {
+		return;
+	}
+
+	if ( current_user_can( 'edit_post', $post->ID ) ) {
+		return;
+	}
+
+	$status = get_post_meta( $post->ID, 'status', true );
+	$archive_url = '';
+
+	if ( 'informasi_lalu_lintas' === $post->post_type ) {
+		if ( 'aktif' === $status ) {
+			return;
+		}
+
+		$archive_url = get_post_type_archive_link( 'informasi_lalu_lintas' );
+	} elseif ( 'kendaraan_temuan' === $post->post_type ) {
+		if ( 'diamankan' === $status ) {
+			return;
+		}
+
+		$archive_url = get_post_type_archive_link( 'kendaraan_temuan' );
+	}
+
+	if ( $archive_url ) {
+		wp_safe_redirect( $archive_url, 302 );
+		exit;
+	}
+}
+add_action( 'template_redirect', 'satlantas_redirect_hidden_cpt_singles' );
 
 /**
  * Registers service locations managed from the WordPress dashboard.
@@ -807,10 +1426,10 @@ function satlantas_render_lokasi_layanan_meta_box( $post ) {
 }
 
 /**
- * Sanitizes a coordinate meta value for Leaflet/OpenStreetMap usage.
+ * Sanitizes a coordinate meta value for frontend map usage.
  *
  * Keeps signed decimal values only; out-of-range or non-numeric values are saved
- * as empty strings so frontend templates can safely skip incomplete markers.
+ * as empty strings so frontend templates can safely handle incomplete coordinates.
  *
  * @param mixed  $value Coordinate value from the admin form.
  * @param string $type  Coordinate type: latitude or longitude.
@@ -876,7 +1495,7 @@ add_action( 'save_post_lokasi_layanan', 'satlantas_save_lokasi_layanan_meta' );
 /**
  * Returns normalized Lokasi Layanan metadata for frontend templates.
  *
- * Use this helper before rendering Leaflet markers so templates have one stable
+ * Use this helper before rendering map views so templates have one stable
  * shape for address, coordinates, maps URL, hours, phone, and status.
  *
  * @param int|WP_Post|null $post Optional post object or ID. Defaults to current post.
@@ -933,8 +1552,8 @@ function satlantas_get_active_locations( $posts_per_page = -1 ) {
 /**
  * Returns active service locations as normalized data for map templates.
  *
- * This keeps the WP_Query helper intact for archives/cards while giving Leaflet
- * views a ready-to-encode array with latitude and longitude included.
+ * This keeps the WP_Query helper intact for archives/cards while giving map
+ * views a ready-to-encode array with address and coordinate data included.
  *
  * @param int  $posts_per_page      Number of locations to fetch.
  * @param bool $coordinates_only    Whether to return only locations with both coordinates.

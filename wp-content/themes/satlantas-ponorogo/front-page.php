@@ -59,7 +59,7 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 					<span class="service-icon"><?php satlantas_icon( $service[2] ); ?></span>
 					<strong><?php echo esc_html( $service[0] ); ?></strong>
 					<span><?php echo esc_html( $service[1] ); ?></span>
-					<em>Akses Layanan <span aria-hidden="true">→</span></em>
+					<em>Akses Layanan <span aria-hidden="true">Ã¢â€ â€™</span></em>
 				</a>
 			<?php endforeach; ?>
 		</div>
@@ -151,22 +151,23 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 	</section>
 
 	<section class="public-services" aria-labelledby="public-title">
-		<p class="section-eyebrow">Layanan</p>
-		<h2 id="public-title">Publik</h2>
+		<div class="public-services__header">
+			<p class="section-eyebrow">Layanan</p>
+			<h2 id="public-title">Publik</h2>
+		</div>
 		<div class="public-grid">
 			<?php
 			$public_services = array(
-				array( 'e-TBPKB', 'Cek & Pendaftaran BPKB Kendaraan', 'paper' ),
-				array( 'Pengecekan Pajak', 'Cek Pajak Kendaraan Bermotor', 'plate' ),
-				array( 'Info Tilang', 'Informasi terkait tilang', 'info' ),
-				array( 'Jadwal SIM Keliling', 'Jadwal dan Lokasi SIM Keliling', 'clock' ),
-				array( 'Bantuan Polisi', 'Layanan Bantuan Bermotor', 'call' ),
-				array( 'Bantuan Polisi', 'Layanan Bantuan Polisi 24 Jam', 'phone' ),
+				array( 'e-TBPKB', 'Cek & Pendaftaran BPKB Kendaraan', 'paper', satlantas_page_url_by_slug( 'stnk-bpkb' ) ),
+				array( 'Pengecekan Pajak', 'Cek Pajak Kendaraan Bermotor', 'plate', satlantas_page_url_by_slug( 'stnk-bpkb' ) ),
+				array( 'Info Tilang', 'Informasi terkait tilang', 'info', satlantas_page_url_by_slug( 'tilang-etle' ) ),
+				array( 'Jadwal SIM Keliling', 'Jadwal dan Lokasi SIM Keliling', 'map', get_post_type_archive_link( 'sim_keliling' ) ?: home_url( '/sim-keliling/' ) ),
+				array( 'Bantuan Polisi', 'Layanan Bantuan Bermotor', 'call', satlantas_page_url_by_slug( 'kontak' ) ),
+				array( 'Bantuan Polisi', 'Layanan Bantuan Polisi 24 Jam', 'support', satlantas_page_url_by_slug( 'kontak' ) ),
 			);
 			foreach ( $public_services as $index => $service ) :
-				$public_url = 'Jadwal SIM Keliling' === $service[0] ? get_post_type_archive_link( 'sim_keliling' ) : '#';
 				?>
-				<a class="public-card" href="<?php echo esc_url( $public_url ); ?>">
+				<a class="public-card" href="<?php echo esc_url( $service[3] ); ?>">
 					<b><?php echo esc_html( $index + 1 ); ?></b>
 					<span class="public-icon"><?php satlantas_icon( $service[2] ); ?></span>
 					<strong><?php echo esc_html( $service[0] ); ?></strong>
@@ -177,136 +178,96 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 		</div>
 	</section>
 
-	<section class="section sim-keliling-section" aria-labelledby="home-sim-keliling-title">
-		<div class="section-head">
-			<div>
-				<p class="section-eyebrow">Layanan Mobile</p>
-				<h2 id="home-sim-keliling-title">Jadwal SIM Keliling</h2>
-				<p>Jadwal aktif berikutnya untuk layanan SIM Keliling Satlantas Polres Ponorogo.</p>
-			</div>
-			<a class="button-primary" href="<?php echo esc_url( get_post_type_archive_link( 'sim_keliling' ) ); ?>">Lihat Semua</a>
-		</div>
-		<div class="sim-keliling-grid">
-			<?php
-			// Homepage only shows the next three active schedules.
-			$home_sim_keliling_query = satlantas_get_upcoming_sim_keliling( 3 );
-			?>
-			<?php if ( $home_sim_keliling_query->have_posts() ) : ?>
-				<?php while ( $home_sim_keliling_query->have_posts() ) : $home_sim_keliling_query->the_post(); ?>
-					<?php
-					$tanggal  = get_post_meta( get_the_ID(), 'tanggal', true );
-					$jam      = get_post_meta( get_the_ID(), 'jam', true );
-					$alamat   = get_post_meta( get_the_ID(), 'alamat', true );
-					$maps_url = get_post_meta( get_the_ID(), 'maps_url', true );
-					?>
-					<article <?php post_class( 'sim-keliling-card sim-keliling-card--home' ); ?>>
-						<time datetime="<?php echo esc_attr( $tanggal ); ?>"><?php echo esc_html( satlantas_format_sim_keliling_date( $tanggal ) ); ?></time>
-						<div class="sim-keliling-card__body">
-							<h3><?php the_title(); ?></h3>
-							<?php if ( $jam ) : ?>
-								<p><strong>Jam:</strong> <?php echo esc_html( $jam ); ?></p>
-							<?php endif; ?>
-							<?php if ( $alamat ) : ?>
-								<p><strong>Alamat:</strong> <?php echo esc_html( $alamat ); ?></p>
-							<?php endif; ?>
-						</div>
-						<?php if ( $maps_url ) : ?>
-							<a class="button-primary sim-keliling-map" href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener">Lihat Maps</a>
-						<?php endif; ?>
-					</article>
-				<?php endwhile; wp_reset_postdata(); ?>
-			<?php else : ?>
-				<article class="sim-keliling-empty">
-					<p><?php esc_html_e( 'Belum ada jadwal SIM Keliling aktif.', 'satlantas-ponorogo' ); ?></p>
-				</article>
-			<?php endif; ?>
-		</div>
-	</section>
-
 	<section class="section locations-section" aria-labelledby="locations-title">
 		<h2 id="locations-title">Lokasi Layanan</h2>
 		<p class="locations-intro">Temukan lokasi layanan Satlantas Polres Ponorogo yang tersedia untuk masyarakat.</p>
 		<?php
-		$locations_query  = satlantas_get_active_locations();
-		$locations        = $locations_query->posts;
-		$map_locations    = satlantas_get_active_location_layanan_data( -1, true );
-		$primary_location = $locations ? $locations[0] : null;
-		$other_locations  = $locations ? array_slice( $locations, 1 ) : array();
+		$locations         = satlantas_get_active_location_layanan_data( -1, false );
+		$selected_location = $locations ? $locations[0] : null;
+		$selected_title    = $selected_location ? trim( (string) $selected_location['title'] ) : '';
+		$selected_address  = $selected_location && ! empty( $selected_location['meta']['alamat'] ) ? trim( (string) $selected_location['meta']['alamat'] ) : '';
+		$selected_heading  = $selected_title ? $selected_title : ( $selected_address ? $selected_address : esc_html__( 'Lokasi Layanan', 'satlantas-ponorogo' ) );
+		$selected_summary  = $selected_address && $selected_address !== $selected_heading ? $selected_address : '';
 		?>
-		<?php if ( $primary_location ) : ?>
-			<?php
-			$primary_address = get_post_meta( $primary_location->ID, 'alamat', true );
-			$primary_maps    = get_post_meta( $primary_location->ID, 'maps_url', true );
-			$primary_hours   = get_post_meta( $primary_location->ID, 'jam_operasional', true );
-			$primary_phone   = get_post_meta( $primary_location->ID, 'nomor_telepon', true );
-			?>
-			<div class="locations-layout<?php echo empty( $other_locations ) ? ' locations-layout--single' : ''; ?>">
+		<?php if ( $selected_location ) : ?>
+			<div class="locations-layout locations-layout--interactive">
 				<article class="location-hero-card">
 					<div class="location-hero-media">
-						<?php // Render Leaflet only when active locations have complete coordinates. ?>
-						<?php if ( $map_locations ) : ?>
-							<div id="satlantas-service-map" class="location-service-map" role="img" aria-label="<?php esc_attr_e( 'Peta lokasi layanan Satlantas Polres Ponorogo', 'satlantas-ponorogo' ); ?>"></div>
-						<?php else : ?>
-							<div class="location-map-empty">
-								<strong><?php esc_html_e( 'Koordinat lokasi belum tersedia.', 'satlantas-ponorogo' ); ?></strong>
-								<span><?php esc_html_e( 'Tambahkan latitude dan longitude pada data Lokasi Layanan untuk menampilkan peta interaktif.', 'satlantas-ponorogo' ); ?></span>
-							</div>
-						<?php endif; ?>
+						<div id="satlantas-service-map" class="location-service-map" role="region" aria-label="<?php esc_attr_e( 'Peta lokasi layanan Satlantas Polres Ponorogo', 'satlantas-ponorogo' ); ?>"></div>
 					</div>
 
-					<div class="location-hero-content">
-						<span class="location-hero-label"><?php esc_html_e( 'Lokasi Utama', 'satlantas-ponorogo' ); ?></span>
-						<h3><?php echo esc_html( get_the_title( $primary_location ) ); ?></h3>
-						<?php if ( $primary_address ) : ?>
-							<p><?php echo esc_html( $primary_address ); ?></p>
+					<div class="location-hero-content" data-location-hero>
+						<span class="location-hero-label" data-location-field="label"><?php esc_html_e( 'Lokasi Utama', 'satlantas-ponorogo' ); ?></span>
+						<h3 data-location-field="title"><?php echo esc_html( $selected_heading ); ?></h3>
+						<?php if ( $selected_summary ) : ?>
+							<p data-location-field="address"><?php echo esc_html( $selected_summary ); ?></p>
+						<?php else : ?>
+							<p data-location-field="address" hidden></p>
 						<?php endif; ?>
 						<div class="location-hero-meta">
-							<?php if ( $primary_hours ) : ?>
-								<span>
+							<?php if ( ! empty( $selected_location['meta']['jam_operasional'] ) ) : ?>
+								<span data-location-field="hours-wrap">
 									<strong><?php esc_html_e( 'Jam Operasional', 'satlantas-ponorogo' ); ?></strong>
-									<?php echo esc_html( $primary_hours ); ?>
+									<span data-location-field="hours"><?php echo esc_html( $selected_location['meta']['jam_operasional'] ); ?></span>
+								</span>
+							<?php else : ?>
+								<span data-location-field="hours-wrap" hidden>
+									<strong><?php esc_html_e( 'Jam Operasional', 'satlantas-ponorogo' ); ?></strong>
+									<span data-location-field="hours"></span>
 								</span>
 							<?php endif; ?>
-							<?php if ( $primary_phone ) : ?>
-								<span>
+							<?php if ( ! empty( $selected_location['meta']['nomor_telepon'] ) ) : ?>
+								<span data-location-field="phone-wrap">
 									<strong><?php esc_html_e( 'Telepon', 'satlantas-ponorogo' ); ?></strong>
-									<?php echo esc_html( $primary_phone ); ?>
+									<span data-location-field="phone"><?php echo esc_html( $selected_location['meta']['nomor_telepon'] ); ?></span>
+								</span>
+							<?php else : ?>
+								<span data-location-field="phone-wrap" hidden>
+									<strong><?php esc_html_e( 'Telepon', 'satlantas-ponorogo' ); ?></strong>
+									<span data-location-field="phone"></span>
 								</span>
 							<?php endif; ?>
 						</div>
-						<?php if ( $primary_maps ) : ?>
-							<a class="button-primary location-hero-button" href="<?php echo esc_url( $primary_maps ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></a>
+						<?php if ( ! empty( $selected_location['meta']['maps_url'] ) ) : ?>
+							<a class="button-primary location-hero-button" data-location-field="maps-link" href="<?php echo esc_url( $selected_location['meta']['maps_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></a>
+						<?php else : ?>
+							<a class="button-primary location-hero-button" data-location-field="maps-link" href="<?php echo esc_url( $selected_location['permalink'] ); ?>"><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></a>
 						<?php endif; ?>
 					</div>
 				</article>
 
-				<?php if ( $other_locations ) : ?>
+				<?php if ( $locations ) : ?>
 					<div class="location-list" aria-label="<?php esc_attr_e( 'Lokasi layanan lainnya', 'satlantas-ponorogo' ); ?>">
-						<?php foreach ( $other_locations as $location ) : ?>
+						<?php foreach ( $locations as $index => $location ) : ?>
 							<?php
-							$alamat          = get_post_meta( $location->ID, 'alamat', true );
-							$maps_url        = get_post_meta( $location->ID, 'maps_url', true );
-							$jam_operasional = get_post_meta( $location->ID, 'jam_operasional', true );
+							$is_active = 0 === $index;
+							$meta      = $location['meta'];
+							$title     = trim( (string) $location['title'] );
+							$address   = ! empty( $meta['alamat'] ) ? trim( (string) $meta['alamat'] ) : '';
+							$heading   = $title ? $title : ( $address ? $address : sprintf( esc_html__( 'Lokasi %d', 'satlantas-ponorogo' ), $index + 1 ) );
+							$summary   = $address && $address !== $heading ? $address : '';
 							?>
-							<article class="location-item">
+							<button
+								type="button"
+								class="location-item<?php echo $is_active ? ' is-active' : ''; ?>"
+								data-location-id="<?php echo esc_attr( $location['id'] ); ?>"
+								aria-pressed="<?php echo $is_active ? 'true' : 'false'; ?>"
+							>
 								<div class="location-item__content">
-									<strong><?php echo esc_html( get_the_title( $location ) ); ?></strong>
-									<?php if ( $alamat ) : ?>
-										<p><?php echo esc_html( wp_trim_words( $alamat, 14, '...' ) ); ?></p>
+									<strong><?php echo esc_html( $heading ); ?></strong>
+									<?php if ( $summary ) : ?>
+										<p><?php echo esc_html( wp_trim_words( $summary, 14, '...' ) ); ?></p>
 									<?php endif; ?>
-									<?php if ( $jam_operasional ) : ?>
-										<small><?php echo esc_html( $jam_operasional ); ?></small>
+									<?php if ( ! empty( $meta['jam_operasional'] ) ) : ?>
+										<small><?php echo esc_html( $meta['jam_operasional'] ); ?></small>
 									<?php endif; ?>
 								</div>
-								<?php if ( $maps_url ) : ?>
-									<a href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></a>
-								<?php endif; ?>
-							</article>
+								<span class="location-item__action"><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></span>
+							</button>
 						<?php endforeach; ?>
 					</div>
 				<?php endif; ?>
 			</div>
-			<?php wp_reset_postdata(); ?>
 		<?php else : ?>
 			<div class="location-empty location-empty--section">
 				<p><?php esc_html_e( 'Data lokasi layanan belum tersedia.', 'satlantas-ponorogo' ); ?></p>
@@ -319,43 +280,156 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 		<div class="vehicle-search">
 			<label class="screen-reader-text" for="vehicle-search-input">Cari kendaraan</label>
 			<input id="vehicle-search-input" type="search" placeholder="Cari">
-			<a class="button-primary" href="<?php echo esc_url( satlantas_page_url_by_slug( 'info-layanan' ) ); ?>">Lihat Semua</a>
+			<a class="button-primary" href="<?php echo esc_url( get_post_type_archive_link( 'kendaraan_temuan' ) ); ?>">Lihat Semua</a>
 		</div>
 		<h2 id="vehicle-title" class="screen-reader-text">Database Kendaraan</h2>
 		<div class="vehicle-grid">
 			<?php
-			$vehicles = array(
-				array( 'image' => 'vehicle-motor.jpg', 'number' => 'W 503 GC', 'model' => 'HONDA - Roda Dua' ),
-				array( 'image' => 'vehicle-car.jpg', 'number' => 'W 503 DC', 'model' => 'TOYOTA - Roda Empat' ),
-				array( 'image' => 'vehicle-red.jpg', 'number' => 'W 501 DC', 'model' => 'HONDA - Roda Empat' ),
-				array( 'image' => 'vehicle-motor.jpg', 'number' => 'W 503 GC', 'model' => 'HONDA - Roda Dua' ),
-				array( 'image' => 'vehicle-car.jpg', 'number' => 'W 503 DC', 'model' => 'TOYOTA - Roda Empat' ),
-			);
-			foreach ( $vehicles as $vehicle ) :
-				?>
-				<article class="vehicle-card">
-					<img src="<?php echo satlantas_asset( 'assets/images/' . $vehicle['image'] ); ?>" alt="">
-					<strong><?php echo esc_html( $vehicle['number'] ); ?></strong>
-					<small><?php echo esc_html( $vehicle['model'] ); ?></small>
-					<div class="vehicle-meta">
-						<span><b>Lokasi Temuan</b>Polres Ponorogo</span>
-						<span><b>Tanggal Temuan</b>24 Mei 2026</span>
-					</div>
+			$kendaraan_query = satlantas_get_active_kendaraan_temuan( 5 );
+			?>
+			<?php if ( $kendaraan_query->have_posts() ) : ?>
+				<?php while ( $kendaraan_query->have_posts() ) : $kendaraan_query->the_post(); ?>
+					<?php
+					$nomor_polisi    = get_post_meta( get_the_ID(), 'nomor_polisi', true );
+					$merk_kendaraan  = get_post_meta( get_the_ID(), 'merk_kendaraan', true );
+					$jenis_kendaraan = get_post_meta( get_the_ID(), 'jenis_kendaraan', true );
+					$lokasi_temuan   = get_post_meta( get_the_ID(), 'lokasi_temuan', true );
+					$tanggal_temuan  = get_post_meta( get_the_ID(), 'tanggal_temuan', true );
+					$status_badge    = satlantas_get_kendaraan_temuan_status_badge( get_post_meta( get_the_ID(), 'status', true ) ?: 'diamankan' );
+					$vehicle_title   = $nomor_polisi ? $nomor_polisi : get_the_title();
+					$vehicle_model   = trim( $merk_kendaraan . ( $jenis_kendaraan ? ' - ' . $jenis_kendaraan : '' ) );
+					?>
+					<article <?php post_class( 'vehicle-card' ); ?>>
+						<a class="vehicle-card__image" href="<?php the_permalink(); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Lihat detail kendaraan %s', 'satlantas-ponorogo' ), $vehicle_title ) ); ?>">
+							<?php if ( has_post_thumbnail() ) : ?>
+								<?php the_post_thumbnail( 'medium_large' ); ?>
+							<?php else : ?>
+								<span class="vehicle-card__placeholder"><?php esc_html_e( 'Foto belum tersedia', 'satlantas-ponorogo' ); ?></span>
+							<?php endif; ?>
+							<span class="vehicle-card__badge <?php echo esc_attr( $status_badge['class'] ); ?>"><?php echo esc_html( $status_badge['label'] ); ?></span>
+						</a>
+						<strong><a href="<?php the_permalink(); ?>"><?php echo esc_html( $vehicle_title ); ?></a></strong>
+						<?php if ( $vehicle_model ) : ?>
+							<small><?php echo esc_html( $vehicle_model ); ?></small>
+						<?php endif; ?>
+						<div class="vehicle-meta">
+							<?php if ( $lokasi_temuan ) : ?>
+								<span><b><?php esc_html_e( 'Lokasi Temuan', 'satlantas-ponorogo' ); ?></b><?php echo esc_html( wp_trim_words( $lokasi_temuan, 4, '...' ) ); ?></span>
+							<?php endif; ?>
+							<?php if ( $tanggal_temuan ) : ?>
+								<span><b><?php esc_html_e( 'Tanggal Temuan', 'satlantas-ponorogo' ); ?></b><?php echo esc_html( satlantas_format_kendaraan_temuan_date( $tanggal_temuan ) ); ?></span>
+							<?php endif; ?>
+						</div>
+					</article>
+				<?php endwhile; wp_reset_postdata(); ?>
+			<?php else : ?>
+				<article class="kendaraan-empty cpt-empty">
+					<span class="cpt-empty__icon"><?php esc_html_e( 'DATA', 'satlantas-ponorogo' ); ?></span>
+					<h2><?php esc_html_e( 'Belum ada kendaraan temuan aktif', 'satlantas-ponorogo' ); ?></h2>
+					<p><?php esc_html_e( 'Belum ada kendaraan temuan berstatus diamankan saat ini.', 'satlantas-ponorogo' ); ?></p>
 				</article>
-			<?php endforeach; ?>
+			<?php endif; ?>
 		</div>
 	</section>
 
-	<section class="info-center info-center--single" aria-labelledby="info-title">
-		<div class="info-panel">
-			<p class="section-eyebrow">Jadwal Layanan</p>
-			<h2 id="info-title">Hari ini</h2>
-			<div class="schedule-item"><span>SIM Keliling</span><strong>Alun - Alun Ponorogo</strong><p>Jl. Alun-alun Utara, Ponorogo. Jam layanan 08.00 - 12.00 WIB</p></div>
-			<div class="schedule-item"><span>Samsat Keliling</span><strong>Terminal Ponorogo</strong><p>Jl. Ir. H Juanda, Ponorogo. Jam layanan 08.00 - 12.00 WIB</p></div>
-			<p class="section-eyebrow">Informasi Lalu lintas</p>
-			<h2>Terkini</h2>
-			<div class="traffic-tags"><span class="tag-red">Macet</span><span class="tag-yellow">Padat Merayap</span><span class="tag-blue">Informasi</span></div>
-			<p>Arus kendaraan tetap terpantau. Pengguna jalan diimbau mematuhi rambu dan arahan petugas.</p>
+	<section class="info-center info-center--dashboard" aria-labelledby="info-title">
+		<div class="info-panel info-panel--schedule">
+			<div class="info-panel__header">
+				<p class="section-eyebrow">Jadwal Layanan</p>
+				<h2 id="info-title">Hari ini</h2>
+				<p>Jadwal aktif SIM Keliling Satlantas Polres Ponorogo yang ditampilkan dari data layanan terbaru.</p>
+			</div>
+			<div class="schedule-grid">
+				<?php
+				$home_sim_keliling_query = satlantas_get_upcoming_sim_keliling( 4 );
+				?>
+				<?php if ( $home_sim_keliling_query->have_posts() ) : ?>
+					<?php while ( $home_sim_keliling_query->have_posts() ) : $home_sim_keliling_query->the_post(); ?>
+						<?php
+						$tanggal  = get_post_meta( get_the_ID(), 'tanggal', true );
+						$jam      = get_post_meta( get_the_ID(), 'jam', true );
+						$alamat   = get_post_meta( get_the_ID(), 'alamat', true );
+						$maps_url = get_post_meta( get_the_ID(), 'maps_url', true );
+						$label    = $tanggal && current_time( 'Y-m-d' ) === $tanggal ? 'Hari Ini' : satlantas_format_sim_keliling_date( $tanggal );
+						?>
+						<article <?php post_class( 'schedule-card' ); ?>>
+							<div class="schedule-card__rail">
+								<span class="schedule-card__icon"><?php satlantas_icon( 'clock' ); ?></span>
+								<strong>SIM Keliling</strong>
+							</div>
+							<div class="schedule-card__body">
+								<div class="schedule-card__top">
+									<div>
+										<h3><?php the_title(); ?></h3>
+										<span class="schedule-card__date"><?php echo esc_html( $label ); ?></span>
+									</div>
+									<?php if ( $jam ) : ?>
+										<time datetime="<?php echo esc_attr( $tanggal ); ?>"><?php echo esc_html( $jam ); ?></time>
+									<?php endif; ?>
+								</div>
+								<?php if ( $alamat ) : ?>
+									<p class="schedule-card__address"><?php echo esc_html( $alamat ); ?></p>
+								<?php endif; ?>
+								<div class="schedule-card__meta">
+									<?php if ( $jam ) : ?>
+										<span class="schedule-card__chip"><?php echo esc_html( $jam ); ?></span>
+									<?php endif; ?>
+									<?php if ( $maps_url ) : ?>
+										<a class="schedule-card__link" href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener noreferrer">
+											<?php esc_html_e( 'Lihat Rute', 'satlantas-ponorogo' ); ?>
+											<?php satlantas_icon( 'map' ); ?>
+										</a>
+									<?php endif; ?>
+								</div>
+							</div>
+						</article>
+					<?php endwhile; wp_reset_postdata(); ?>
+				<?php else : ?>
+					<article class="info-empty">
+						<p><?php esc_html_e( 'Belum ada jadwal SIM Keliling aktif.', 'satlantas-ponorogo' ); ?></p>
+					</article>
+				<?php endif; ?>
+			</div>
+		</div>
+		<div class="info-panel info-panel--traffic">
+			<div class="info-panel__header">
+				<p class="section-eyebrow">Informasi Lalu Lintas</p>
+				<h2>Terkini</h2>
+				<p>Ringkasan kondisi dan pengumuman aktif yang siap dipindai cepat oleh masyarakat.</p>
+			</div>
+			<div class="traffic-list">
+				<?php
+				$home_traffic_query = satlantas_get_active_informasi_lalu_lintas( 4 );
+				?>
+				<?php if ( $home_traffic_query->have_posts() ) : ?>
+					<?php while ( $home_traffic_query->have_posts() ) : $home_traffic_query->the_post(); ?>
+						<?php
+						$kategori      = get_post_meta( get_the_ID(), 'kategori', true );
+						$urutan_tampil = get_post_meta( get_the_ID(), 'urutan_tampil', true );
+						$traffic_badge = satlantas_get_informasi_lalu_lintas_category_badge( $kategori );
+						$summary       = wp_trim_words( wp_strip_all_tags( get_the_content( null, false, get_the_ID() ) ), 24, '...' );
+						$meta_date     = get_the_date( 'd M Y' );
+						?>
+						<article <?php post_class( 'traffic-item' ); ?>>
+							<div class="traffic-item__top">
+								<span class="traffic-status <?php echo esc_attr( $traffic_badge['class'] ); ?>"><?php echo esc_html( $traffic_badge['label'] ); ?></span>
+								<time datetime="<?php echo esc_attr( get_the_date( DATE_W3C ) ); ?>"><?php echo esc_html( $meta_date ); ?></time>
+							</div>
+							<h3><?php the_title(); ?></h3>
+							<?php if ( $summary ) : ?>
+								<p><?php echo esc_html( $summary ); ?></p>
+							<?php endif; ?>
+							<?php if ( $urutan_tampil ) : ?>
+								<span class="traffic-item__order"><?php echo esc_html( sprintf( __( 'Urutan tampil %s', 'satlantas-ponorogo' ), $urutan_tampil ) ); ?></span>
+							<?php endif; ?>
+						</article>
+					<?php endwhile; wp_reset_postdata(); ?>
+				<?php else : ?>
+					<article class="info-empty">
+						<p><?php esc_html_e( 'Belum ada informasi lalu lintas aktif saat ini.', 'satlantas-ponorogo' ); ?></p>
+					</article>
+				<?php endif; ?>
+			</div>
 		</div>
 	</section>
 

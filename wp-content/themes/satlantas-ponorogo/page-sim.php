@@ -5,142 +5,136 @@
  *
  * @package Satlantas_Ponorogo
  */
+
 get_header();
 
 while ( have_posts() ) :
 	the_post();
-?>
 
-<main id="primary" class="site-main sim-page">
-	<section class="sim-hero" aria-labelledby="sim-title">
-		<div class="sim-hero__content">
-			<p class="section-eyebrow">Layanan Satlantas</p>
-			<h1 id="sim-title">Layanan SIM</h1>
-			<p>Pembuatan SIM baru, perpanjangan SIM, persyaratan, biaya PNBP, dan jadwal pelayanan Satlantas Polres Ponorogo.</p>
-			<a class="button-primary sim-cta" href="<?php echo esc_url( home_url( '/kontak/' ) ); ?>">Hubungi Petugas</a>
-		</div>
-	</section>
+	$page_content = trim( (string) get_post_field( 'post_content', get_the_ID() ) );
+	?>
 
-	<section class="sim-section" aria-labelledby="sim-services-title">
-		<div class="section-head">
-			<div>
-				<p class="section-eyebrow">Jenis Layanan</p>
-				<h2 id="sim-services-title">SIM Baru & Perpanjangan SIM</h2>
-			</div>
-		</div>
-		<div class="sim-card-grid">
-			<article class="sim-card">
-				<span class="service-icon"><?php satlantas_icon( 'sim' ); ?></span>
-				<h3>SIM Baru</h3>
-				<p>Layanan penerbitan SIM untuk pemohon yang telah memenuhi persyaratan administrasi, kesehatan, psikologi, dan ujian.</p>
-			</article>
-			<article class="sim-card">
-				<span class="service-icon"><?php satlantas_icon( 'clock' ); ?></span>
-				<h3>Perpanjangan SIM</h3>
-				<p>Layanan perpanjangan masa berlaku SIM sebelum tanggal kedaluwarsa sesuai ketentuan yang berlaku.</p>
-			</article>
-		</div>
-	</section>
+<main id="primary" class="site-main sim-document-page">
+	<article class="sim-document" aria-labelledby="sim-title">
+		<header class="sim-document__header">
+			<p><?php esc_html_e( 'Pelayanan', 'satlantas-ponorogo' ); ?></p>
+			<h1 id="sim-title"><?php the_title(); ?></h1>
+		</header>
 
-	<section class="sim-section sim-info-layout" aria-label="<?php esc_attr_e( 'Informasi layanan SIM', 'satlantas-ponorogo' ); ?>">
-		<article class="sim-panel">
-			<p class="section-eyebrow">Dokumen</p>
-			<h2>Persyaratan</h2>
-			<ul class="sim-list">
-				<li>KTP asli dan fotokopi yang masih berlaku.</li>
-				<li>Surat keterangan sehat jasmani.</li>
-				<li>Surat keterangan psikologi.</li>
-				<li>SIM lama untuk layanan perpanjangan.</li>
-				<li>Mengisi formulir permohonan di loket pelayanan.</li>
-			</ul>
-		</article>
-
-		<article class="sim-panel">
-			<p class="section-eyebrow">Tarif Resmi</p>
-			<h2>Biaya PNBP</h2>
-			<div class="sim-fee-list">
-				<div><span>SIM A Baru</span><strong>Rp120.000</strong></div>
-				<div><span>SIM C Baru</span><strong>Rp100.000</strong></div>
-				<div><span>SIM A Perpanjangan</span><strong>Rp80.000</strong></div>
-				<div><span>SIM C Perpanjangan</span><strong>Rp75.000</strong></div>
-			</div>
-		</article>
-	</section>
-
-	<section class="sim-section" aria-labelledby="sim-schedule-title">
-		<div class="sim-schedule">
-			<div>
-				<p class="section-eyebrow">Jam Operasional</p>
-				<h2 id="sim-schedule-title">Jadwal Pelayanan</h2>
-				<p>Datang sesuai jam layanan dan pastikan seluruh berkas sudah lengkap sebelum mengambil nomor antrean.</p>
-			</div>
-			<div class="sim-schedule__items">
-				<div><span>Senin - Jumat</span><strong>08.00 - 14.00 WIB</strong></div>
-				<div><span>Sabtu</span><strong>08.00 - 10.30 WIB</strong></div>
-				<div><span>Minggu / Hari Libur</span><strong>Tutup</strong></div>
-			</div>
-		</div>
-	</section>
-
-	<section class="sim-section" aria-labelledby="sim-keliling-title">
-		<div class="section-head">
-			<div>
-				<p class="section-eyebrow">Layanan Mobile</p>
-				<h2 id="sim-keliling-title">Jadwal SIM Keliling Terdekat</h2>
-			</div>
-			<a class="button-primary" href="<?php echo esc_url( get_post_type_archive_link( 'sim_keliling' ) ); ?>">Lihat Semua</a>
-		</div>
-		<div class="sim-keliling-list sim-keliling-list--compact cpt-card-list">
-			<?php
-			// Fetch five active schedules nearest to today for the SIM service page.
-			$sim_keliling_query = satlantas_get_upcoming_sim_keliling( 5 );
-			?>
-			<?php if ( $sim_keliling_query->have_posts() ) : ?>
-				<?php while ( $sim_keliling_query->have_posts() ) : $sim_keliling_query->the_post(); ?>
-					<?php
-					$tanggal  = get_post_meta( get_the_ID(), 'tanggal', true );
-					$jam      = get_post_meta( get_the_ID(), 'jam', true );
-					$alamat   = get_post_meta( get_the_ID(), 'alamat', true );
-					$maps_url = get_post_meta( get_the_ID(), 'maps_url', true );
-					?>
-					<article <?php post_class( 'sim-keliling-card cpt-card cpt-card--schedule' ); ?>>
-						<time datetime="<?php echo esc_attr( $tanggal ); ?>"><?php echo esc_html( satlantas_format_sim_keliling_date( $tanggal ) ); ?></time>
-						<div class="sim-keliling-card__body">
-							<div class="cpt-meta">
-								<span class="cpt-badge cpt-badge--success">Aktif</span>
-								<?php if ( $jam ) : ?>
-									<span><?php echo esc_html( $jam ); ?></span>
-								<?php endif; ?>
-							</div>
-							<h3><?php the_title(); ?></h3>
-							<?php if ( $alamat ) : ?>
-								<p><strong>Alamat:</strong> <?php echo esc_html( $alamat ); ?></p>
-							<?php endif; ?>
-						</div>
-						<div class="cpt-actions">
-							<?php if ( $maps_url ) : ?>
-								<a class="button-primary sim-keliling-map" href="<?php echo esc_url( $maps_url ); ?>" target="_blank" rel="noopener">Lihat Maps</a>
-							<?php endif; ?>
-						</div>
-					</article>
-				<?php endwhile; wp_reset_postdata(); ?>
+		<div class="sim-document__body sim-document__content entry-content">
+			<?php if ( '' !== $page_content ) : ?>
+				<?php the_content(); ?>
 			<?php else : ?>
-				<article class="sim-keliling-empty cpt-empty">
-					<span class="cpt-empty__icon">SIM</span>
-					<h3><?php esc_html_e( 'Belum ada jadwal aktif', 'satlantas-ponorogo' ); ?></h3>
-					<p><?php esc_html_e( 'Belum ada jadwal SIM Keliling aktif.', 'satlantas-ponorogo' ); ?></p>
-				</article>
+				<section class="sim-document__section">
+					<h2>PENGERTIAN SIM</h2>
+					<p>Adalah bukti legitimasi kompetensi pengemudi sesuai jenis dan golongan SIM yang dimilikinya setelah memenuhi persyaratan administrasi, usia, kesehatan jasmani maupun rohani, serta dinyatakan lulus melalui proses pengujian.</p>
+				</section>
+
+				<section class="sim-document__section">
+					<h2>Fungsi SIM:</h2>
+					<ol>
+						<li>Legitimasi kompetensi pengemudi</li>
+						<li>Identitas pengemudi</li>
+						<li>Kontrol kompetensi pengemudi</li>
+						<li>Forensik Kepolisian</li>
+					</ol>
+				</section>
+
+				<section class="sim-document__section">
+					<h2>Persyaratan pendaftaran SIM:</h2>
+					<ol>
+						<li>USIA</li>
+						<li>ADMINISTRASI</li>
+						<li>KESEHATAN JASMANI DAN ROHANI</li>
+						<li>PNBP SIM</li>
+					</ol>
+				</section>
+
+				<section class="sim-document__section">
+					<h2>Usia:</h2>
+					<ul>
+						<li>berusia 17 (tujuh belas) tahun untuk SIM A, SIM C, dan SIM D</li>
+						<li>berusia 20 (dua puluh) tahun untuk SIM B I</li>
+						<li>berusia 21 (dua puluh satu) tahun untuk SIM B II</li>
+						<li>berusia 20 (dua puluh) tahun untuk SIM A Umum</li>
+						<li>berusia 22 (dua puluh dua) tahun untuk SIM B I Umum</li>
+						<li>berusia 23 (dua puluh tiga) tahun untuk SIM B II Umum</li>
+					</ul>
+				</section>
+
+				<section class="sim-document__section">
+					<h2>Administrasi:</h2>
+					<ul>
+						<li>Kartu Tanda Penduduk asli setempat yang masih berlaku bagi Warga Negara Indonesia atau dokumen keimigrasian bagi Warga Negara Asing</li>
+						<li>surat keterangan Kesehatan Jasmani dari Dokter</li>
+						<li>surat keterangan Kesehatan Rohani dari Biro Psikologi</li>
+						<li>SIM lama untuk permohonan perpanjangan SIM</li>
+						<li>Untuk pengalihan golongan SIM, harus disertai dengan Surat Lulus Uji Keterampilan Simulator</li>
+					</ul>
+				</section>
+
+				<section class="sim-document__section">
+					<h2>Dokumen Keimigrasian:</h2>
+					<ul>
+						<li>paspor dan kartu izin tinggal tetap (KITAP) bagi yang berdomisili tetap di Indonesia</li>
+						<li>paspor, visa diplomatik, kartu anggota diplomatik, dan identitas dari lain bagi yang merupakan staf atau keluarga kedutaan</li>
+						<li>paspor dan visa dinas atau kartu izin tinggal sementara (KITAS) bagi yang bekerja sebagai tenaga ahli atau pelajar yang bersekolah di Indonesia</li>
+						<li>paspor dan kartu izin kunjungan atau singgah bagi yang tidak berdomisili di Indonesia</li>
+					</ul>
+				</section>
+
+				<section class="sim-document__section">
+					<h2>Ketentuan:</h2>
+					<p>SIM yang telah lewat masa berlakunya, dinyatakan tidak berlaku dan harus membuat proses penerbitan SIM baru.</p>
+				</section>
+
+				<section class="sim-document__section">
+					<h2>TARIF PNBP SIM PERPANJANGAN, SIM HILANG/RUSAK, MUTASI SIM DAN PERUBAHAN DATA PENGEMUDI</h2>
+					<p class="sim-document__note">(SESUAI PP RI NO 76 TAHUN 2020).</p>
+					<div class="sim-document__table-wrap">
+						<table class="sim-document__table">
+							<thead>
+								<tr>
+									<th>Jenis</th>
+									<th>Tarif</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>SIM A dan A Umum</td>
+									<td>Rp 80.000</td>
+								</tr>
+								<tr>
+									<td>SIM B I dan B I Umum</td>
+									<td>Rp 80.000</td>
+								</tr>
+								<tr>
+									<td>SIM B II dan B II Umum</td>
+									<td>Rp 80.000</td>
+								</tr>
+								<tr>
+									<td>SIM C, C I, C II</td>
+									<td>Rp 75.000</td>
+								</tr>
+								<tr>
+									<td>SIM D, D I</td>
+									<td>Rp 30.000</td>
+								</tr>
+								<tr>
+									<td>SIM Internasional (SI)</td>
+									<td>Rp 225.000</td>
+								</tr>
+								<tr>
+									<td>SKUKP</td>
+									<td>Rp 50.000</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</section>
 			<?php endif; ?>
 		</div>
-	</section>
-
-	<section class="sim-section sim-contact">
-		<div>
-			<p class="section-eyebrow">Butuh Bantuan?</p>
-			<h2>Petugas siap membantu proses layanan SIM Anda.</h2>
-		</div>
-		<a class="button-primary sim-cta" href="<?php echo esc_url( home_url( '/kontak/' ) ); ?>">Hubungi Petugas</a>
-	</section>
+	</article>
 </main>
 
 <?php
