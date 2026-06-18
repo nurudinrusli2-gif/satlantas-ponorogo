@@ -1,6 +1,6 @@
 <?php
 /**
- * Archive template for Informasi Lalu Lintas.
+ * Archive template for Informasi Terkini.
  *
  * @package Satlantas_Ponorogo
  */
@@ -11,7 +11,7 @@ get_header();
 <main id="primary" class="site-main listing-page traffic-archive">
 	<header class="archive-header">
 		<p class="section-eyebrow"><?php esc_html_e( 'Informasi Lalu Lintas', 'satlantas-ponorogo' ); ?></p>
-		<h1><?php esc_html_e( 'Informasi Lalu Lintas', 'satlantas-ponorogo' ); ?></h1>
+		<h1><?php esc_html_e( 'Informasi Terkini', 'satlantas-ponorogo' ); ?></h1>
 		<p><?php esc_html_e( 'Daftar informasi lalu lintas aktif Satlantas Polres Ponorogo.', 'satlantas-ponorogo' ); ?></p>
 	</header>
 
@@ -54,4 +54,3 @@ get_header();
 
 <?php
 get_footer();
-

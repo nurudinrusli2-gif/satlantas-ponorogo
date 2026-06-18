@@ -11,8 +11,8 @@ get_header();
 <main id="primary" class="site-main listing-page sim-keliling-archive">
 	<header class="archive-header">
 		<p class="section-eyebrow"><?php esc_html_e( 'Jadwal Layanan', 'satlantas-ponorogo' ); ?></p>
-		<h1><?php esc_html_e( 'SIM Keliling', 'satlantas-ponorogo' ); ?></h1>
-		<p><?php esc_html_e( 'Daftar jadwal aktif SIM Keliling Satlantas Polres Ponorogo yang akan datang.', 'satlantas-ponorogo' ); ?></p>
+		<h1><?php esc_html_e( 'Layanan Keliling', 'satlantas-ponorogo' ); ?></h1>
+		<p><?php esc_html_e( 'Daftar jadwal aktif SIM Keliling dan Samsat Keliling Satlantas Polres Ponorogo.', 'satlantas-ponorogo' ); ?></p>
 	</header>
 
 	<div class="sim-keliling-list cpt-card-list">
@@ -24,11 +24,13 @@ get_header();
 				$jam      = get_post_meta( get_the_ID(), 'jam', true );
 				$alamat   = get_post_meta( get_the_ID(), 'alamat', true );
 				$maps_url = get_post_meta( get_the_ID(), 'maps_url', true );
+				$service_label = satlantas_get_keliling_service_label( get_the_ID() );
 				?>
 				<article <?php post_class( 'sim-keliling-card cpt-card cpt-card--schedule' ); ?>>
 					<time datetime="<?php echo esc_attr( $tanggal ); ?>"><?php echo esc_html( satlantas_format_sim_keliling_date( $tanggal ) ); ?></time>
 					<div class="sim-keliling-card__body">
 						<div class="cpt-meta">
+							<span class="cpt-badge"><?php echo esc_html( $service_label ); ?></span>
 							<span class="cpt-badge cpt-badge--success"><?php esc_html_e( 'Aktif', 'satlantas-ponorogo' ); ?></span>
 							<?php if ( $jam ) : ?>
 								<span><?php echo esc_html( $jam ); ?></span>
@@ -52,7 +54,7 @@ get_header();
 			<article class="sim-keliling-empty cpt-empty">
 				<span class="cpt-empty__icon"><?php esc_html_e( 'SIM', 'satlantas-ponorogo' ); ?></span>
 				<h2><?php esc_html_e( 'Belum ada jadwal aktif', 'satlantas-ponorogo' ); ?></h2>
-				<p><?php esc_html_e( 'Jadwal SIM Keliling akan ditampilkan setelah diperbarui oleh administrator.', 'satlantas-ponorogo' ); ?></p>
+				<p><?php esc_html_e( 'Jadwal SIM Keliling dan Samsat Keliling akan ditampilkan setelah diperbarui oleh administrator.', 'satlantas-ponorogo' ); ?></p>
 			</article>
 		<?php endif; ?>
 	</div>

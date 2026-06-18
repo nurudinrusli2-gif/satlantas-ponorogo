@@ -1,6 +1,6 @@
 <?php
 /**
- * Single template for Informasi Lalu Lintas.
+ * Single template for Informasi Terkini.
  *
  * @package Satlantas_Ponorogo
  */
@@ -62,4 +62,3 @@ get_header();
 
 <?php
 get_footer();
-

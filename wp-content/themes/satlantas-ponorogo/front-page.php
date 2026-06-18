@@ -59,7 +59,7 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 					<span class="service-icon"><?php satlantas_icon( $service[2] ); ?></span>
 					<strong><?php echo esc_html( $service[0] ); ?></strong>
 					<span><?php echo esc_html( $service[1] ); ?></span>
-					<em>Akses Layanan <span aria-hidden="true">Ã¢â€ â€™</span></em>
+					<em>Akses Layanan <span aria-hidden="true">&rarr;</span></em>
 				</a>
 			<?php endforeach; ?>
 		</div>
@@ -151,32 +151,280 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 	</section>
 
 	<section class="public-services" aria-labelledby="public-title">
-		<div class="public-services__header">
-			<p class="section-eyebrow">Layanan</p>
-			<h2 id="public-title">Publik</h2>
-		</div>
-		<div class="public-grid">
-			<?php
-			$public_services = array(
-				array( 'e-TBPKB', 'Cek & Pendaftaran BPKB Kendaraan', 'paper', satlantas_page_url_by_slug( 'stnk-bpkb' ) ),
-				array( 'Pengecekan Pajak', 'Cek Pajak Kendaraan Bermotor', 'plate', satlantas_page_url_by_slug( 'stnk-bpkb' ) ),
-				array( 'Info Tilang', 'Informasi terkait tilang', 'info', satlantas_page_url_by_slug( 'tilang-etle' ) ),
-				array( 'Jadwal SIM Keliling', 'Jadwal dan Lokasi SIM Keliling', 'map', get_post_type_archive_link( 'sim_keliling' ) ?: home_url( '/sim-keliling/' ) ),
-				array( 'Bantuan Polisi', 'Layanan Bantuan Bermotor', 'call', satlantas_page_url_by_slug( 'kontak' ) ),
-				array( 'Bantuan Polisi', 'Layanan Bantuan Polisi 24 Jam', 'support', satlantas_page_url_by_slug( 'kontak' ) ),
-			);
-			foreach ( $public_services as $index => $service ) :
-				?>
-				<a class="public-card" href="<?php echo esc_url( $service[3] ); ?>">
-					<b><?php echo esc_html( $index + 1 ); ?></b>
-					<span class="public-icon"><?php satlantas_icon( $service[2] ); ?></span>
-					<strong><?php echo esc_html( $service[0] ); ?></strong>
-					<small><?php echo esc_html( $service[1] ); ?></small>
-					<em>Selengkapnya</em>
-				</a>
-			<?php endforeach; ?>
-		</div>
-	</section>
+	<div class="public-services__header">
+		<p class="section-eyebrow">Layanan</p>
+		<h2 id="public-title">Publik</h2>
+	</div>
+	<div class="public-grid">
+		<?php
+		$public_services = array(
+			array(
+				'title'       => 'e-TBPKB',
+				'description' => 'Cek & Pendaftaran BPKB Kendaraan',
+				'icon'        => '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M18 10h10l6 6v22H18z"/><path d="M28 10v8h6"/><path d="M22 22h8M22 27h8M22 32h8"/><rect x="13" y="16" width="4" height="16" rx="1.5"/></svg>',
+				'url'         => satlantas_page_url_by_slug( 'stnk-bpkb' ),
+				'cta'         => 'Buka Layanan BPKB',
+				'steps'       => array( 'Siapkan identitas pemilik kendaraan.', 'Siapkan STNK dan dokumen kendaraan.', 'Lihat persyaratan BPKB sebelum mengajukan.' ),
+			),
+			array(
+				'title'       => 'Pengecekan Pajak',
+				'description' => 'Cek Pajak Kendaraan Bermotor',
+				'icon'        => '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="13" y="12" width="22" height="24" rx="3"/><path d="M19 17h10M19 22h10M19 27h6"/><path d="M25 30h8"/><path d="M29 12v24"/></svg>',
+				'url'         => satlantas_page_url_by_slug( 'stnk-bpkb' ),
+				'cta'         => 'Lihat Info Pajak',
+				'steps'       => array( 'Siapkan nomor polisi kendaraan.', 'Periksa masa berlaku STNK.', 'Lihat informasi pembayaran dan pengesahan.' ),
+			),
+			array(
+				'title'       => 'Info Tilang',
+				'description' => 'Informasi Tilang dan ETLE',
+				'icon'        => '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="16" y="11" width="16" height="24" rx="3"/><path d="M24 18v7"/><circle cx="24" cy="30" r="1.4"/><path d="M12 36h24"/></svg>',
+				'url'         => satlantas_page_url_by_slug( 'tilang-etle' ),
+				'cta'         => 'Buka Info Tilang',
+				'steps'       => array( 'Periksa informasi pelanggaran.', 'Pelajari prosedur konfirmasi ETLE.', 'Ikuti petunjuk penyelesaian tilang.' ),
+			),
+			array(
+				'title'       => 'Jadwal SIM Keliling',
+				'description' => 'Jadwal dan Lokasi SIM Keliling',
+				'icon'        => '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 29h26"/><path d="M14 29v-7h12l4 4h6v3"/><circle cx="18" cy="33" r="3"/><circle cx="31" cy="33" r="3"/><path d="M22 17v8"/></svg>',
+				'url'         => get_post_type_archive_link( 'sim_keliling' ) ?: home_url( '/sim-keliling/' ),
+				'cta'         => 'Lihat Jadwal',
+				'steps'       => array( 'Pilih jadwal yang masih aktif.', 'Periksa lokasi dan jam pelayanan.', 'Bawa SIM lama serta identitas diri.' ),
+			),
+			array(
+				'title'       => 'Bantuan Kendaraan',
+				'description' => 'Bantuan Kendaraan di Jalan',
+				'icon'        => '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="32" r="4"/><circle cx="31" cy="32" r="4"/><path d="M17 32h8l4-8h4"/><path d="M22 20h6l3 4"/><circle cx="23" cy="16" r="2.5"/><path d="M20 24l5-3 3 3"/></svg>',
+				'url'         => satlantas_page_url_by_slug( 'kontak' ),
+				'cta'         => 'Minta Bantuan',
+				'steps'       => array( 'Amankan diri dan kendaraan terlebih dahulu.', 'Catat lokasi serta kondisi kendaraan.', 'Hubungi petugas melalui halaman kontak.' ),
+			),
+			array(
+				'title'       => 'Bantuan Polisi',
+				'description' => 'Layanan Bantuan Polisi 24 Jam',
+				'icon'        => '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="15" r="4"/><path d="M17 22c1.5-3 12.5-3 14 0"/><path d="M13 26h22"/><path d="M16 26v9M32 26v9"/><path d="M19 35h10"/></svg>',
+				'url'         => satlantas_page_url_by_slug( 'kontak' ),
+				'cta'         => 'Hubungi Petugas',
+				'steps'       => array( 'Jelaskan jenis bantuan yang dibutuhkan.', 'Sampaikan lokasi kejadian dengan jelas.', 'Ikuti arahan petugas dan tetap tenang.' ),
+			),
+		);
+		foreach ( $public_services as $index => $service ) :
+			?>
+			<button class="public-card public-service-trigger" type="button" data-service-index="<?php echo esc_attr( $index ); ?>" aria-haspopup="dialog">
+				<b><?php echo esc_html( $index + 1 ); ?></b>
+				<span class="public-icon"><?php echo $service['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+				<strong><?php echo esc_html( $service['title'] ); ?></strong>
+				<small><?php echo esc_html( $service['description'] ); ?></small>
+				<em>Lihat Layanan</em>
+			</button>
+		<?php endforeach; ?>
+	</div>
+
+	<dialog class="public-service-dialog" id="public-service-dialog" aria-labelledby="public-service-dialog-title">
+		<button class="public-service-dialog__close" type="button" aria-label="<?php esc_attr_e( 'Tutup panel layanan', 'satlantas-ponorogo' ); ?>">&times;</button>
+		<div class="public-service-dialog__icon" aria-hidden="true"></div>
+		<p class="public-service-dialog__eyebrow"><?php esc_html_e( 'Layanan Publik', 'satlantas-ponorogo' ); ?></p>
+		<h3 id="public-service-dialog-title"></h3>
+		<p class="public-service-dialog__description"></p>
+		<ol class="public-service-dialog__steps"></ol>
+		<a class="public-service-dialog__action" href="#"><?php esc_html_e( 'Buka Layanan', 'satlantas-ponorogo' ); ?></a>
+	</dialog>
+
+	<style>
+		.public-service-trigger {
+			width: 100%;
+			font: inherit;
+			border: 0;
+			cursor: pointer;
+		}
+		.public-service-trigger:focus-visible {
+			outline: 3px solid rgba(15, 141, 244, .3);
+			outline-offset: 4px;
+		}
+		.public-service-dialog {
+			width: min(520px, calc(100% - 32px));
+			padding: 34px;
+			color: #243142;
+			background: linear-gradient(145deg, #fff, #f4f9ff);
+			border: 1px solid rgba(15, 141, 244, .16);
+			border-radius: 24px;
+			box-shadow: 0 30px 80px rgba(19, 42, 68, .28);
+		}
+		.public-service-dialog[open] {
+			animation: public-service-in .22s ease-out;
+		}
+		.public-service-dialog::backdrop {
+			background: rgba(11, 24, 39, .62);
+			backdrop-filter: blur(5px);
+		}
+		.public-service-dialog__close {
+			position: absolute;
+			top: 16px;
+			right: 16px;
+			display: grid;
+			place-items: center;
+			width: 38px;
+			height: 38px;
+			color: #516173;
+			background: #edf4fb;
+			border: 0;
+			border-radius: 50%;
+			font-size: 25px;
+			cursor: pointer;
+		}
+		.public-service-dialog__icon {
+			display: grid;
+			place-items: center;
+			width: 68px;
+			height: 68px;
+			margin-bottom: 20px;
+			color: #fff;
+			background: linear-gradient(135deg, #0f8df4, #086dcc);
+			border-radius: 20px;
+			box-shadow: 0 14px 30px rgba(15, 141, 244, .28);
+		}
+		.public-service-dialog__icon svg {
+			width: 38px;
+			height: 38px;
+			fill: none;
+			stroke: currentColor;
+			stroke-width: 1.8;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+		}
+		.public-service-dialog__eyebrow {
+			margin: 0 0 5px;
+			color: #0f8df4;
+			font-size: 12px;
+			font-weight: 800;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+		}
+		.public-service-dialog h3 {
+			margin: 0;
+			font-size: clamp(25px, 5vw, 34px);
+			line-height: 1.1;
+		}
+		.public-service-dialog__description {
+			margin: 10px 0 22px;
+			color: #657386;
+			line-height: 1.6;
+		}
+		.public-service-dialog__steps {
+			display: grid;
+			gap: 10px;
+			padding: 0;
+			margin: 0 0 26px;
+			list-style: none;
+			counter-reset: service-step;
+		}
+		.public-service-dialog__steps li {
+			display: grid;
+			grid-template-columns: 30px 1fr;
+			align-items: center;
+			gap: 11px;
+			padding: 10px 12px;
+			background: rgba(255, 255, 255, .78);
+			border: 1px solid #e0ebf5;
+			border-radius: 12px;
+			color: #435267;
+			font-size: 14px;
+			text-align: left;
+			counter-increment: service-step;
+		}
+		.public-service-dialog__steps li::before {
+			display: grid;
+			place-items: center;
+			width: 30px;
+			height: 30px;
+			color: #0872d3;
+			background: #e4f3ff;
+			border-radius: 9px;
+			font-size: 12px;
+			font-weight: 800;
+			content: counter(service-step);
+		}
+		.public-service-dialog__action {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 48px;
+			padding: 0 22px;
+			color: #fff;
+			background: linear-gradient(135deg, #0f8df4, #0872d3);
+			border-radius: 13px;
+			font-size: 14px;
+			font-weight: 800;
+			box-shadow: 0 12px 24px rgba(15, 141, 244, .22);
+		}
+		@keyframes public-service-in {
+			from { opacity: 0; transform: translateY(18px) scale(.97); }
+			to { opacity: 1; transform: translateY(0) scale(1); }
+		}
+		@media (max-width: 560px) {
+			.public-service-dialog { padding: 28px 20px 22px; border-radius: 20px; }
+		}
+	</style>
+
+	<script>
+		(function () {
+			'use strict';
+
+			var services = <?php echo wp_json_encode( array_values( $public_services ) ); ?>;
+			var dialog = document.getElementById('public-service-dialog');
+			var triggers = document.querySelectorAll('.public-service-trigger');
+
+			if (!dialog || typeof dialog.showModal !== 'function') {
+				return;
+			}
+
+			var title = dialog.querySelector('#public-service-dialog-title');
+			var description = dialog.querySelector('.public-service-dialog__description');
+			var icon = dialog.querySelector('.public-service-dialog__icon');
+			var steps = dialog.querySelector('.public-service-dialog__steps');
+			var action = dialog.querySelector('.public-service-dialog__action');
+			var closeButton = dialog.querySelector('.public-service-dialog__close');
+
+			triggers.forEach(function (trigger) {
+				trigger.addEventListener('click', function () {
+					var service = services[Number(trigger.dataset.serviceIndex)];
+
+					if (!service) {
+						return;
+					}
+
+					title.textContent = service.title;
+					description.textContent = service.description;
+					icon.innerHTML = service.icon;
+					steps.replaceChildren();
+
+					service.steps.forEach(function (step) {
+						var item = document.createElement('li');
+						item.textContent = step;
+						steps.appendChild(item);
+					});
+
+					action.href = service.url;
+					action.textContent = service.cta;
+					dialog.showModal();
+				});
+			});
+
+			closeButton.addEventListener('click', function () {
+				dialog.close();
+			});
+
+			dialog.addEventListener('click', function (event) {
+				var bounds = dialog.getBoundingClientRect();
+				var isOutside = event.clientX < bounds.left || event.clientX > bounds.right ||
+					event.clientY < bounds.top || event.clientY > bounds.bottom;
+
+				if (isOutside) {
+					dialog.close();
+				}
+			});
+		}());
+	</script>
+</section>
 
 	<section class="section locations-section" aria-labelledby="locations-title">
 		<h2 id="locations-title">Lokasi Layanan</h2>
@@ -277,13 +525,14 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 
 	<section class="section vehicle-section" aria-labelledby="vehicle-title">
 		<img class="ilmu-banner" src="<?php echo satlantas_asset( 'assets/images/ilmu-semeru.jpg' ); ?>" alt="<?php esc_attr_e( 'ILMU SEMERU', 'satlantas-ponorogo' ); ?>">
-		<div class="vehicle-search">
-			<label class="screen-reader-text" for="vehicle-search-input">Cari kendaraan</label>
-			<input id="vehicle-search-input" type="search" placeholder="Cari">
+		<div class="vehicle-search" role="search">
+			<label class="screen-reader-text" for="vehicle-search-input">Cari kendaraan berdasarkan nomor polisi</label>
+			<input id="vehicle-search-input" type="search" placeholder="Cari nomor polisi, contoh: AE 1234 AB" autocomplete="off" aria-controls="vehicle-search-results">
 			<a class="button-primary" href="<?php echo esc_url( get_post_type_archive_link( 'kendaraan_temuan' ) ); ?>">Lihat Semua</a>
 		</div>
+		<p id="vehicle-search-status" class="vehicle-search-status screen-reader-text" aria-live="polite"></p>
 		<h2 id="vehicle-title" class="screen-reader-text">Database Kendaraan</h2>
-		<div class="vehicle-grid">
+		<div id="vehicle-search-results" class="vehicle-grid">
 			<?php
 			$kendaraan_query = satlantas_get_active_kendaraan_temuan( 5 );
 			?>
@@ -351,11 +600,12 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 						$alamat   = get_post_meta( get_the_ID(), 'alamat', true );
 						$maps_url = get_post_meta( get_the_ID(), 'maps_url', true );
 						$label    = $tanggal && current_time( 'Y-m-d' ) === $tanggal ? 'Hari Ini' : satlantas_format_sim_keliling_date( $tanggal );
+						$service_label = satlantas_get_keliling_service_label( get_the_ID() );
 						?>
 						<article <?php post_class( 'schedule-card' ); ?>>
 							<div class="schedule-card__rail">
 								<span class="schedule-card__icon"><?php satlantas_icon( 'clock' ); ?></span>
-								<strong>SIM Keliling</strong>
+								<strong><?php echo esc_html( $service_label ); ?></strong>
 							</div>
 							<div class="schedule-card__body">
 								<div class="schedule-card__top">
@@ -407,15 +657,17 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 						$kategori      = get_post_meta( get_the_ID(), 'kategori', true );
 						$urutan_tampil = get_post_meta( get_the_ID(), 'urutan_tampil', true );
 						$traffic_badge = satlantas_get_informasi_lalu_lintas_category_badge( $kategori );
-						$summary       = wp_trim_words( wp_strip_all_tags( get_the_content( null, false, get_the_ID() ) ), 24, '...' );
+						$summary       = wp_trim_words( wp_strip_all_tags( satlantas_get_informasi_lalu_lintas_description( get_the_ID() ) ), 24, '...' );
 						$meta_date     = get_the_date( 'd M Y' );
 						?>
 						<article <?php post_class( 'traffic-item' ); ?>>
 							<div class="traffic-item__top">
-								<span class="traffic-status <?php echo esc_attr( $traffic_badge['class'] ); ?>"><?php echo esc_html( $traffic_badge['label'] ); ?></span>
+								<span
+									class="traffic-status traffic-title <?php echo esc_attr( $traffic_badge['class'] ); ?>"
+									title="<?php echo esc_attr( $traffic_badge['label'] ); ?>"
+								><?php the_title(); ?></span>
 								<time datetime="<?php echo esc_attr( get_the_date( DATE_W3C ) ); ?>"><?php echo esc_html( $meta_date ); ?></time>
 							</div>
-							<h3><?php the_title(); ?></h3>
 							<?php if ( $summary ) : ?>
 								<p><?php echo esc_html( $summary ); ?></p>
 							<?php endif; ?>
