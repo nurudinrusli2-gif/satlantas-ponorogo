@@ -57,6 +57,23 @@ add_action( 'after_setup_theme', 'satlantas_setup' );
  * Enqueue theme styles and scripts.
  */
 function satlantas_scripts() {
+	wp_enqueue_script(
+		'satlantas-visitor-counter',
+		get_template_directory_uri() . '/assets/js/visitor-counter.js',
+		array(),
+		SATLANTAS_VERSION,
+		true
+	);
+
+	wp_localize_script(
+		'satlantas-visitor-counter',
+		'satlantasVisitorCounter',
+		array(
+			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'satlantas_visitor_counter' ),
+		)
+	);
+
 	if ( is_front_page() ) {
 		wp_enqueue_script(
 			'satlantas-vehicle-search',
@@ -1462,6 +1479,98 @@ function satlantas_order_kendaraan_temuan_archive( $query ) {
 	);
 }
 add_action( 'pre_get_posts', 'satlantas_order_kendaraan_temuan_archive' );
+
+/**
+ * Returns the current website visitor counters.
+ *
+ * A visit is counted once per browser per local calendar day.
+ *
+ * @return array
+ */
+function satlantas_get_visitor_counts() {
+	$today         = current_time( 'Y-m-d' );
+	$current_month = current_time( 'Y-m' );
+	$daily         = get_option( 'satlantas_visitor_daily', array() );
+	$monthly       = get_option( 'satlantas_visitor_monthly', array() );
+
+	return array(
+		'today' => ( isset( $daily['date'], $daily['count'] ) && $today === $daily['date'] ) ? absint( $daily['count'] ) : 0,
+		'month' => ( isset( $monthly['month'], $monthly['count'] ) && $current_month === $monthly['month'] ) ? absint( $monthly['count'] ) : 0,
+		'total' => absint( get_option( 'satlantas_visitor_total', 0 ) ),
+	);
+}
+
+/**
+ * Records one website visit for the current browser and day.
+ *
+ * @return array Updated visitor counters.
+ */
+function satlantas_record_visitor() {
+	$today         = current_time( 'Y-m-d' );
+	$current_month = current_time( 'Y-m' );
+	$cookie_name   = 'satlantas_visitor_day';
+
+	if ( isset( $_COOKIE[ $cookie_name ] ) && $today === sanitize_text_field( wp_unslash( $_COOKIE[ $cookie_name ] ) ) ) {
+		return satlantas_get_visitor_counts();
+	}
+
+	$daily = get_option( 'satlantas_visitor_daily', array() );
+	if ( ! isset( $daily['date'] ) || $today !== $daily['date'] ) {
+		$daily = array(
+			'date'  => $today,
+			'count' => 0,
+		);
+	}
+	$daily['count'] = absint( $daily['count'] ) + 1;
+	update_option( 'satlantas_visitor_daily', $daily, false );
+
+	$monthly = get_option( 'satlantas_visitor_monthly', array() );
+	if ( ! isset( $monthly['month'] ) || $current_month !== $monthly['month'] ) {
+		$monthly = array(
+			'month' => $current_month,
+			'count' => 0,
+		);
+	}
+	$monthly['count'] = absint( $monthly['count'] ) + 1;
+	update_option( 'satlantas_visitor_monthly', $monthly, false );
+
+	update_option( 'satlantas_visitor_total', absint( get_option( 'satlantas_visitor_total', 0 ) ) + 1, false );
+
+	setcookie(
+		$cookie_name,
+		$today,
+		array(
+			'expires'  => strtotime( 'tomorrow', current_time( 'timestamp' ) ),
+			'path'     => COOKIEPATH ?: '/',
+			'domain'   => COOKIE_DOMAIN,
+			'secure'   => is_ssl(),
+			'httponly' => true,
+			'samesite' => 'Lax',
+		)
+	);
+
+	return satlantas_get_visitor_counts();
+}
+
+/**
+ * Sends real-time website visitor counts to the footer.
+ */
+function satlantas_ajax_visitor_counter() {
+	check_ajax_referer( 'satlantas_visitor_counter', 'nonce' );
+
+	$record = isset( $_POST['record'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['record'] ) );
+	$counts = $record ? satlantas_record_visitor() : satlantas_get_visitor_counts();
+
+	wp_send_json_success(
+		array(
+			'today' => number_format_i18n( $counts['today'] ),
+			'month' => number_format_i18n( $counts['month'] ),
+			'total' => number_format_i18n( $counts['total'] ),
+		)
+	);
+}
+add_action( 'wp_ajax_satlantas_visitor_counter', 'satlantas_ajax_visitor_counter' );
+add_action( 'wp_ajax_nopriv_satlantas_visitor_counter', 'satlantas_ajax_visitor_counter' );
 
 /**
  * Redirects non-public singles to the relevant archive.

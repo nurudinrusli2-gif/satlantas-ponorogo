@@ -5,6 +5,7 @@
  * @package Satlantas_Ponorogo
  */
 ?>
+	<?php $visitor_counts = function_exists( 'satlantas_get_visitor_counts' ) ? satlantas_get_visitor_counts() : array( 'today' => 0, 'month' => 0, 'total' => 0 ); ?>
 	<footer class="site-footer">
 		<div class="footer-grid">
 			<div class="footer-brand">
@@ -43,9 +44,9 @@
 		</div>
 		<div class="footer-bottom">
 			<span><?php esc_html_e( 'Pengunjung', 'satlantas-ponorogo' ); ?></span>
-			<span><?php esc_html_e( 'Hari ini: 1.218', 'satlantas-ponorogo' ); ?></span>
-			<span><?php esc_html_e( 'Bulan ini: 3.422', 'satlantas-ponorogo' ); ?></span>
-			<span><?php esc_html_e( 'Total: 3.422', 'satlantas-ponorogo' ); ?></span>
+			<span><?php esc_html_e( 'Hari ini:', 'satlantas-ponorogo' ); ?> <b data-visitor-count="today"><?php echo esc_html( number_format_i18n( $visitor_counts['today'] ) ); ?></b></span>
+			<span><?php esc_html_e( 'Bulan ini:', 'satlantas-ponorogo' ); ?> <b data-visitor-count="month"><?php echo esc_html( number_format_i18n( $visitor_counts['month'] ) ); ?></b></span>
+			<span><?php esc_html_e( 'Total:', 'satlantas-ponorogo' ); ?> <b data-visitor-count="total"><?php echo esc_html( number_format_i18n( $visitor_counts['total'] ) ); ?></b></span>
 			<span class="copyright">&copy; <?php echo esc_html( gmdate( 'Y' ) ); ?> <?php bloginfo( 'name' ); ?>. All Rights Reserved.</span>
 		</div>
 	</footer>
