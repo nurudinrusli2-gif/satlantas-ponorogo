@@ -430,75 +430,34 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 		<h2 id="locations-title">Lokasi Layanan</h2>
 		<p class="locations-intro">Temukan lokasi layanan Satlantas Polres Ponorogo yang tersedia untuk masyarakat.</p>
 		<?php
-		$locations         = satlantas_get_active_location_layanan_data( -1, false );
-		$selected_location = $locations ? $locations[0] : null;
-		$selected_title    = $selected_location ? trim( (string) $selected_location['title'] ) : '';
-		$selected_address  = $selected_location && ! empty( $selected_location['meta']['alamat'] ) ? trim( (string) $selected_location['meta']['alamat'] ) : '';
-		$selected_heading  = $selected_title ? $selected_title : ( $selected_address ? $selected_address : esc_html__( 'Lokasi Layanan', 'satlantas-ponorogo' ) );
-		$selected_summary  = $selected_address && $selected_address !== $selected_heading ? $selected_address : '';
+		$locations = satlantas_get_active_location_layanan_data( -1, false );
 		?>
-		<?php if ( $selected_location ) : ?>
+		<?php if ( $locations ) : ?>
 			<div class="locations-layout locations-layout--interactive">
 				<article class="location-hero-card">
 					<div class="location-hero-media">
 						<div id="satlantas-service-map" class="location-service-map" role="region" aria-label="<?php esc_attr_e( 'Peta lokasi layanan Satlantas Polres Ponorogo', 'satlantas-ponorogo' ); ?>"></div>
 					</div>
-
-					<div class="location-hero-content" data-location-hero>
-						<span class="location-hero-label" data-location-field="label"><?php esc_html_e( 'Lokasi Utama', 'satlantas-ponorogo' ); ?></span>
-						<h3 data-location-field="title"><?php echo esc_html( $selected_heading ); ?></h3>
-						<?php if ( $selected_summary ) : ?>
-							<p data-location-field="address"><?php echo esc_html( $selected_summary ); ?></p>
-						<?php else : ?>
-							<p data-location-field="address" hidden></p>
-						<?php endif; ?>
-						<div class="location-hero-meta">
-							<?php if ( ! empty( $selected_location['meta']['jam_operasional'] ) ) : ?>
-								<span data-location-field="hours-wrap">
-									<strong><?php esc_html_e( 'Jam Operasional', 'satlantas-ponorogo' ); ?></strong>
-									<span data-location-field="hours"><?php echo esc_html( $selected_location['meta']['jam_operasional'] ); ?></span>
-								</span>
-							<?php else : ?>
-								<span data-location-field="hours-wrap" hidden>
-									<strong><?php esc_html_e( 'Jam Operasional', 'satlantas-ponorogo' ); ?></strong>
-									<span data-location-field="hours"></span>
-								</span>
-							<?php endif; ?>
-							<?php if ( ! empty( $selected_location['meta']['nomor_telepon'] ) ) : ?>
-								<span data-location-field="phone-wrap">
-									<strong><?php esc_html_e( 'Telepon', 'satlantas-ponorogo' ); ?></strong>
-									<span data-location-field="phone"><?php echo esc_html( $selected_location['meta']['nomor_telepon'] ); ?></span>
-								</span>
-							<?php else : ?>
-								<span data-location-field="phone-wrap" hidden>
-									<strong><?php esc_html_e( 'Telepon', 'satlantas-ponorogo' ); ?></strong>
-									<span data-location-field="phone"></span>
-								</span>
-							<?php endif; ?>
-						</div>
-						<?php if ( ! empty( $selected_location['meta']['maps_url'] ) ) : ?>
-							<a class="button-primary location-hero-button" data-location-field="maps-link" href="<?php echo esc_url( $selected_location['meta']['maps_url'] ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></a>
-						<?php else : ?>
-							<a class="button-primary location-hero-button" data-location-field="maps-link" href="<?php echo esc_url( $selected_location['permalink'] ); ?>"><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></a>
-						<?php endif; ?>
-					</div>
 				</article>
 
-				<?php if ( $locations ) : ?>
-					<div class="location-list" aria-label="<?php esc_attr_e( 'Lokasi layanan lainnya', 'satlantas-ponorogo' ); ?>">
-						<?php foreach ( $locations as $index => $location ) : ?>
-							<?php
-							$is_active = 0 === $index;
-							$meta      = $location['meta'];
-							$title     = trim( (string) $location['title'] );
-							$address   = ! empty( $meta['alamat'] ) ? trim( (string) $meta['alamat'] ) : '';
-							$heading   = $title ? $title : ( $address ? $address : sprintf( esc_html__( 'Lokasi %d', 'satlantas-ponorogo' ), $index + 1 ) );
-							$summary   = $address && $address !== $heading ? $address : '';
-							?>
+				<div class="location-list" aria-label="<?php esc_attr_e( 'Lokasi layanan lainnya', 'satlantas-ponorogo' ); ?>">
+					<?php foreach ( $locations as $index => $location ) : ?>
+						<?php
+						$is_active = 0 === $index;
+						$meta      = $location['meta'];
+						$title     = trim( (string) $location['title'] );
+						$address   = ! empty( $meta['alamat'] ) ? trim( (string) $meta['alamat'] ) : '';
+						$heading   = $title ? $title : ( $address ? $address : sprintf( esc_html__( 'Lokasi %d', 'satlantas-ponorogo' ), $index + 1 ) );
+						$summary   = $address && $address !== $heading ? $address : '';
+						$maps_url = ! empty( $meta['maps_url'] ) ? $meta['maps_url'] : $location['permalink'];
+						?>
+						<article
+							class="location-item<?php echo $is_active ? ' is-active' : ''; ?>"
+							data-location-id="<?php echo esc_attr( $location['id'] ); ?>"
+						>
 							<button
+								class="location-item__select"
 								type="button"
-								class="location-item<?php echo $is_active ? ' is-active' : ''; ?>"
-								data-location-id="<?php echo esc_attr( $location['id'] ); ?>"
 								aria-pressed="<?php echo $is_active ? 'true' : 'false'; ?>"
 							>
 								<div class="location-item__content">
@@ -510,11 +469,11 @@ $news_url      = $news_url ?: home_url( '/berita/' );
 										<small><?php echo esc_html( $meta['jam_operasional'] ); ?></small>
 									<?php endif; ?>
 								</div>
-								<span class="location-item__action"><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></span>
 							</button>
-						<?php endforeach; ?>
-					</div>
-				<?php endif; ?>
+							<a class="location-item__action" href="<?php echo esc_url( $maps_url ); ?>"<?php echo ! empty( $meta['maps_url'] ) ? ' target="_blank" rel="noopener noreferrer"' : ''; ?>><?php esc_html_e( 'Lihat Peta', 'satlantas-ponorogo' ); ?></a>
+						</article>
+					<?php endforeach; ?>
+				</div>
 			</div>
 		<?php else : ?>
 			<div class="location-empty location-empty--section">

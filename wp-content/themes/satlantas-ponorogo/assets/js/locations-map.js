@@ -29,8 +29,7 @@
 		var mapElement = document.getElementById('satlantas-service-map');
 		var config = window.satlantasLocationsMap || {};
 		var locations = Array.isArray(config.locations) ? config.locations : [];
-		var hero = document.querySelector('[data-location-hero]');
-		var locationButtons = Array.prototype.slice.call(document.querySelectorAll('.location-item[data-location-id]'));
+		var locationItems = Array.prototype.slice.call(document.querySelectorAll('.location-item[data-location-id]'));
 		var initialLocationId = String(locations[0] && locations[0].id ? locations[0].id : '');
 		var mapFrame = null;
 
@@ -50,55 +49,6 @@
 			mapElement.appendChild(mapFrame);
 		}
 
-		function setText(fieldName, value) {
-			var field = hero ? hero.querySelector('[data-location-field="' + fieldName + '"]') : null;
-
-			if (!field) {
-				return;
-			}
-
-			field.textContent = value || '';
-		}
-
-		function setVisibility(fieldName, visible) {
-			var field = hero ? hero.querySelector('[data-location-field="' + fieldName + '"]') : null;
-
-			if (!field) {
-				return;
-			}
-
-			field.hidden = !visible;
-		}
-
-		function updateHero(location) {
-			var meta = location.meta || {};
-			var title = location.title || meta.alamat || 'Lokasi Layanan';
-			var summary = meta.alamat && meta.alamat !== title ? meta.alamat : '';
-			var mapsUrl = meta.maps_url || location.permalink || '#';
-			var mapsLink = hero ? hero.querySelector('[data-location-field="maps-link"]') : null;
-
-			setText('label', String(location.id) === initialLocationId ? 'Lokasi Utama' : 'Lokasi Terpilih');
-			setText('title', title);
-			setText('address', summary);
-			setText('hours', meta.jam_operasional || '');
-			setText('phone', meta.nomor_telepon || '');
-			setVisibility('address', Boolean(summary));
-			setVisibility('hours-wrap', Boolean(meta.jam_operasional));
-			setVisibility('phone-wrap', Boolean(meta.nomor_telepon));
-
-			if (mapsLink) {
-				mapsLink.href = mapsUrl;
-
-				if (meta.maps_url) {
-					mapsLink.target = '_blank';
-					mapsLink.rel = 'noopener noreferrer';
-				} else {
-					mapsLink.removeAttribute('target');
-					mapsLink.removeAttribute('rel');
-				}
-			}
-		}
-
 		function updateMap(location) {
 			var mapUrl = buildMapEmbedUrl(location);
 
@@ -110,10 +60,15 @@
 		}
 
 		function setActiveButton(locationId) {
-			locationButtons.forEach(function (button) {
-				var isActive = String(button.dataset.locationId || '') === String(locationId);
-				button.classList.toggle('is-active', isActive);
-				button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+			locationItems.forEach(function (item) {
+				var button = item.querySelector('.location-item__select');
+				var isActive = String(item.dataset.locationId || '') === String(locationId);
+
+				item.classList.toggle('is-active', isActive);
+
+				if (button) {
+					button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+				}
 			});
 		}
 
@@ -127,17 +82,27 @@
 			}
 
 			setActiveButton(location.id);
-			updateHero(location);
 			updateMap(location);
 		}
 
-		locationButtons.forEach(function (button) {
-			button.addEventListener('click', function () {
-				selectLocation(button.dataset.locationId);
-			});
+		locationItems.forEach(function (item) {
+			var button = item.querySelector('.location-item__select');
+			var mapsLink = item.querySelector('.location-item__action');
+
+			if (button) {
+				button.addEventListener('click', function () {
+					selectLocation(item.dataset.locationId);
+				});
+			}
+
+			if (mapsLink) {
+				mapsLink.addEventListener('click', function () {
+					selectLocation(item.dataset.locationId);
+				});
+			}
 		});
 
-		selectLocation(initialLocationId || locationButtons[0] && locationButtons[0].dataset.locationId);
+		selectLocation(initialLocationId || locationItems[0] && locationItems[0].dataset.locationId);
 	}
 
 	if ('loading' === document.readyState) {
